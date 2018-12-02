@@ -21,12 +21,6 @@ uint8_t ledOn = false, add = 10, color = 0;
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharText;
 
-void led(bool on) {
-  uint16_t i, bright;
-  uint32_t c = strip.Color(255, 255, 255);
-  
-  for(uint8_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
 void setLed(bool on) {
   if (ledOn == on) {
 //    if (ledOn && color < 255) {
