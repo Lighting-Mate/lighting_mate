@@ -14,12 +14,12 @@
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
 #define DEVICE_NAME         "ESP_Blinky"
 
-#define PIN 32
+#define PIN_BUTTON 32
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(6, PIN, NEO_GBR + NEO_KHZ800);
 Scheduler scheduler;
-
-uint8_t blinkOn;
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(6, PIN_BUTTON, NEO_GBR + NEO_KHZ800);
+uint32_t c = strip.Color(0, 0, 0);
+uint8_t ledOn = false, add = 10, color = 0;
 
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharText;
@@ -30,22 +30,28 @@ void led(bool on) {
   
   for(uint8_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
+void setLed(bool on) {
+  if (ledOn == on) {
+    strip.show();
+    delay(10);
+    return;
   }
-  delay(10);
-  strip.show();
-}
+  ledOn = on;
 
-void setBlink(bool on, bool notify = false) {
-  if (on) {
-    Serial.println("Blink ON");
+  if (ledOn) {
+    Serial.println("LED ON");
+    c = strip.Color(128, 128, 128);
   } else {
-    Serial.println("\nBlink OFF");
+    Serial.println("LED OFF");
+    c = strip.Color(0, 0, 0);
   }
-  led(on);
-  pCharBlink->setValue(&blinkOn, 1);
-  if (notify) {
-    pCharBlink->notify();
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+    strip.setPixelColor(i, c);
   }
+  delay(1);
+  strip.show();
+  
+  pCharBlink->setValue(&ledOn, 1);
 }
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -87,6 +93,9 @@ class TextCallbacks: public BLECharacteristicCallbacks {
 
 void setup() {
   Serial.begin(9600);
+  delay(500);
+  Serial.println("Starting...");
+
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #endif
@@ -96,6 +105,7 @@ void setup() {
   strip.show(); // Initialize all pixels to 'off'
 
   Serial.println("Starting...");
+  strip.show();
 
   BLEDevice::init(DEVICE_NAME);
   BLEServer *pServer = BLEDevice::createServer();
@@ -134,4 +144,6 @@ void setup() {
 
 void loop() {
   scheduler.execute();
+  setLed(ledOn);
+  delay(10);
 }
