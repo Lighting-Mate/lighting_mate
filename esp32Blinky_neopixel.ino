@@ -35,6 +35,7 @@ void setLed(bool on) {
     delay(10);
     return;
   }
+  
   ledOn = on;
 
   if (ledOn) {
@@ -66,9 +67,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
 class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string vtext = pCharacteristic->getValue();
-//      int value = stoi(vtext.c_str());
       uint8_t value0 = vtext[0];
-//      uint8_t value1 = vtext[1];
       
       strip.setBrightness(value0);
       setLed(true);
@@ -97,12 +96,8 @@ void setup() {
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #endif
-  // End of trinket special code
   strip.begin();
   delay(1);
-  strip.show(); // Initialize all pixels to 'off'
-
-  Serial.println("Starting...");
   strip.show();
 
   BLEDevice::init(DEVICE_NAME);
