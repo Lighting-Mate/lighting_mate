@@ -29,6 +29,13 @@ void led(bool on) {
     strip.setPixelColor(i, c);
 void setLed(bool on) {
   if (ledOn == on) {
+//    if (ledOn && color < 255) {
+//      color = color + add;
+//      c = strip.Color(color, color, color);
+//      for(uint16_t i=0; i<strip.numPixels(); i++) {
+//        strip.setPixelColor(i, c);
+//      }
+//    }
     strip.show();
     delay(10);
     return;
