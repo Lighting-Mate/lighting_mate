@@ -1,3 +1,4 @@
+#include <string>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -64,17 +65,16 @@ class MyServerCallbacks: public BLEServerCallbacks {
 
 class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string value = pCharacteristic->getValue();
-
-      if (value.length()  == 1) {
-        uint8_t v = value[0];
-        Serial.print("Got blink value: ");
-        Serial.println(v);
-        setBlink(v ? true : false);
-      } else {
-        Serial.println("Invalid data received");
-      }
-    }
+      std::string vtext = pCharacteristic->getValue();
+//      int value = stoi(vtext.c_str());
+      uint8_t value0 = vtext[0];
+//      uint8_t value1 = vtext[1];
+      
+      strip.setBrightness(value0);
+      setLed(true);
+      Serial.print("Got blink value: ");
+      Serial.println(value0);
+   }
 };
 
 class TextCallbacks: public BLECharacteristicCallbacks {
