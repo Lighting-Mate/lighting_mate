@@ -3,8 +3,6 @@
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include <Adafruit_NeoPixel.h>
-#include <TaskScheduler.h>
-
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
@@ -16,7 +14,6 @@
 
 #define PIN_BUTTON 32
 
-Scheduler scheduler;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(6, PIN_BUTTON, NEO_GBR + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
@@ -143,7 +140,6 @@ void setup() {
 }
 
 void loop() {
-  scheduler.execute();
   setLed(ledOn);
   delay(10);
 }
