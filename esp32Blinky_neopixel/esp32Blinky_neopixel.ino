@@ -24,20 +24,12 @@ BLECharacteristic *pCharText;
 
 void setLed(bool on) {
   if (ledOn == on) {
-//    if (ledOn && color < 255) {
-//      color = color + add;
-//      c = strip.Color(color, color, color);
-//      for(uint16_t i=0; i<strip.numPixels(); i++) {
-//        strip.setPixelColor(i, c);
-//      }
-//    }
     strip.show();
-    delay(10);
+    delay(1);
     return;
   }
   
   ledOn = on;
-
   if (ledOn) {
     Serial.println("LED ON");
     c = strip.Color(128, 128, 128);
