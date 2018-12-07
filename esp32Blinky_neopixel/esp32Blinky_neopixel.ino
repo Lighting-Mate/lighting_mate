@@ -51,34 +51,43 @@ void setLed(bool on) {
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
       Serial.println("Connected");
+      ledOn = true;
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, strip.Color(128, 128, 128));
+      }
+      delay(1);
+      strip.show();
     };
 
     void onDisconnect(BLEServer* pServer) {
       Serial.println("Disconnected");
+      ledOn = false;
+      strip.clear();
+      delay(1);
+      strip.show();
     }
 };
 
 class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string vtext = pCharacteristic->getValue();
-      uint8_t value0 = vtext[0];
-      
-      strip.setBrightness(value0);
-      setLed(true);
-      Serial.print("Got blink value: ");
-      Serial.println(value0);
+//      std::string vtext = pCharacteristic->getValue();
+//      uint8_t value0 = vtext[0];
+//      
+//      strip.setBrightness(value0);
+//      setLed(true);
+//      Serial.print("Got blink value: ");
+//      Serial.println(value0);
    }
 };
 
 class TextCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string value = pCharacteristic->getValue();
-
-      Serial.print("Got text value: \"");
-      for (int i = 0; i < value.length(); i++) {
-        Serial.print(value[i]);
-      }
-      Serial.println("\"");
+//      std::string value = pCharacteristic->getValue();
+//      Serial.print("Got text value: \"");
+//      for (int i = 0; i < value.length(); i++) {
+//        Serial.print(value[i]);
+//      }
+//      Serial.println("\"");
     }
 };
 
