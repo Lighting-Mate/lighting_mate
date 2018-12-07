@@ -27,7 +27,6 @@ BLECharacteristic *pCharText;
 void setLed(bool on) {
   if (ledOn == on) {
     strip.show();
-    delay(1);
     return;
   }
   
@@ -140,5 +139,5 @@ void setup() {
 
 void loop() {
   setLed(ledOn);
-  delay(10);
+  delay(20);
 }
