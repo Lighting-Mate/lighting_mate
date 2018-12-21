@@ -90,8 +90,8 @@ class TextCallbacks: public BLECharacteristicCallbacks {
     }
 };
 
-void setup() {
-  Serial.begin(9600);
+void setup() {  
+  Serial.begin(115200);
   delay(500);
   Serial.println("Starting...");
 
