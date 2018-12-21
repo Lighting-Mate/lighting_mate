@@ -15,9 +15,9 @@
 #define DEVICE_NAME         "ESP_Blinky"
 
 #define PIN_BUTTON 32
-#defune PIN_NUM 3
+#define LED_NUM 3
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(PIN_NUM, PIN_BUTTON, NEO_GBR + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, PIN_BUTTON, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
 
