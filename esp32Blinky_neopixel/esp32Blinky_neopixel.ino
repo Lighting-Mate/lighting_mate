@@ -17,12 +17,54 @@
 #define PIN_BUTTON 32
 #define LED_NUM 3
 
+static BLEAddress *pServerAddress;
+static boolean doConnect = false;
+static boolean connected = false;
+
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, PIN_BUTTON, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
 
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharText;
+
+bool connectToServer(BLEAddress pAddress) {
+    Serial.println(pAddress.toString().c_str());
+    
+    BLEClient*  pClient  = BLEDevice::createClient();
+    Serial.println(" - Created client");
+    
+    pClient->connect(pAddress);
+    Serial.println(" - Connected to server");
+
+    BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
+    if (pRemoteService == nullptr) {
+      Serial.print("Failed to find our service UUID: ");
+      Serial.println(BLEUUID(SERVICE_UUID).toString().c_str());
+      return false;
+    }
+    Serial.println(" - Found our service");
+}
+
+class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
+  void onResult(BLEAdvertisedDevice advertisedDevice) {
+    Serial.print("BLE Advertised Device found: ");
+    Serial.println(advertisedDevice.toString().c_str());
+    
+    if (advertisedDevice.haveServiceUUID() && advertisedDevice.getServiceUUID().equals(BLEUUID(SERVICE_UUID))) {
+      Serial.print("Found our device!  address: "); 
+      advertisedDevice.getScan()->stop();
+      
+      delay(100);
+      pServerAddress = new BLEAddress(advertisedDevice.getAddress());
+      delay(100);
+      
+      Serial.print(pServerAddress->toString().c_str());
+      doConnect = true;
+    }
+  }
+}; 
+
 
 void setLed(bool on) {
   if (ledOn == on) {
@@ -134,10 +176,25 @@ void setup() {
 
   pAdvertising->start();
 
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pBLEScan->setActiveScan(true);
+  pBLEScan->start(30);
+
   Serial.println("Ready");
 }
 
 void loop() {
-  setLed(ledOn);
-  delay(20);
+
+  if (doConnect == true) {
+    if (connectToServer(*pServerAddress)) {
+      Serial.println("We are now connected to the BLE Server.");
+      connected = true;
+    } else {
+      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+    }
+    doConnect = false;
+  }
+  
+  delay(1000);
 }
