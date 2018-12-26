@@ -17,9 +17,9 @@
 #define PIN_BUTTON 32
 #define LED_NUM 3
 
-static BLEAddress *pServerAddress;
+static std::vector<BLEAddress*> pServerAddresses;
+
 static boolean doConnect = false;
-static boolean connected = false;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, PIN_BUTTON, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
@@ -44,6 +44,14 @@ bool connectToServer(BLEAddress pAddress) {
       return false;
     }
     Serial.println(" - Found our service");
+
+    BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(TEXT_UUID));
+    if (pRemoteChara == nullptr) {
+      Serial.print("Failed to find our service UUID: ");
+      Serial.println(BLEUUID(TEXT_UUID).toString().c_str());
+      return false;
+    }
+    Serial.println(" - Found our Characteristic");
 }
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
@@ -53,14 +61,13 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
     
     if (advertisedDevice.haveServiceUUID() && advertisedDevice.getServiceUUID().equals(BLEUUID(SERVICE_UUID))) {
       Serial.print("Found our device!  address: "); 
-      advertisedDevice.getScan()->stop();
       
       delay(100);
-      pServerAddress = new BLEAddress(advertisedDevice.getAddress());
+      BLEAddress *pServerAddress = new BLEAddress(advertisedDevice.getAddress());
       delay(100);
       
       Serial.print(pServerAddress->toString().c_str());
-      doConnect = true;
+      pServerAddresses.push_back(pServerAddress);
     }
   }
 }; 
@@ -178,20 +185,22 @@ void setup() {
 
   BLEScan* pBLEScan = BLEDevice::getScan();
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(true);
-  pBLEScan->start(30);
+  pBLEScan->setActiveScan(false);
+  pBLEScan->start(20);
 
   Serial.println("Ready");
+  doConnect = true;
 }
 
 void loop() {
 
   if (doConnect == true) {
-    if (connectToServer(*pServerAddress)) {
-      Serial.println("We are now connected to the BLE Server.");
-      connected = true;
-    } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+    for(int i=0; i < pServerAddresses.size(); i++){
+      if( connectToServer( *pServerAddresses[i] ) ){
+        Serial.println("- Connect Server Done;");
+      }else{
+        Serial.println("-- Connect Something wrong...;");
+      }
     }
     doConnect = false;
   }
