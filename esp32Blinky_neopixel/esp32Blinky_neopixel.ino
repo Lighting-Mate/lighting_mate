@@ -25,7 +25,7 @@ uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
 
 float x = 0.5;
-int cValue = 0;
+uint16_t cValue = 0, prev = 0;
 
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharText;
@@ -107,6 +107,39 @@ float chaos(float x) {
   if(x < 0.005) x = 0.005;
   if(x > 0.9) x = 0.9;
   return(x);
+}
+
+void chaosBlink() {
+  x = chaos(x);
+  uint16_t next = (uint16_t)(x*255);
+  uint16_t cnt;
+  int16_t add;
+  
+  if(next > prev) {
+    cnt = next - prev;
+    add = 1;
+  } else {
+    cnt = prev - next;
+    add = -1;
+  }
+  Serial.print(next);
+  Serial.print(prev);
+  Serial.print(add);
+  Serial.println("----");
+  while(cnt > 0) {
+    Serial.println(cValue);
+    cValue = cValue + add;
+    c = strip.Color(cValue, cValue, cValue);
+    for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, c);
+    }
+    delay(1);
+    strip.show();
+    delay(50);
+    cnt--;
+  }
+  
+  prev = next;
 }
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -220,17 +253,6 @@ void loop() {
   
 //  delay(1000);
 
-    x = light(x);
-    cValue = (int)(x*255);
-    Serial.println(x);
-    Serial.println(cValue);
-    delay(10);
-    c = strip.Color(cValue, cValue, cValue);
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-    }
-    delay(1);
-    strip.show();
-    delay((int)random(10, 100));
-    
+    chaosBlink();
+    delay(1000);
 }
