@@ -150,59 +150,59 @@ void setup() {
   delay(1);
   strip.show();
 
-  BLEDevice::init(DEVICE_NAME);
-  BLEServer *pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
-
-
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-
-  pCharBlink = pService->createCharacteristic(BLINK_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_WRITE);
-  pCharBlink->setCallbacks(new BlinkCallbacks());
-  pCharBlink->addDescriptor(new BLE2902());
-
-  pCharText = pService->createCharacteristic(TEXT_UUID, BLECharacteristic::PROPERTY_WRITE);
-  pCharText->setCallbacks(new TextCallbacks());
-
-  pService->start();
-
-  // ----- Advertising
-
-  BLEAdvertising *pAdvertising = pServer->getAdvertising();
-
-  BLEAdvertisementData adv;
-  adv.setName(DEVICE_NAME);
-  adv.setCompleteServices(BLEUUID(SERVICE_UUID));
-  pAdvertising->setAdvertisementData(adv);
-
-  BLEAdvertisementData adv2;
-  adv2.setName(DEVICE_NAME);
-  //  adv.setCompleteServices(BLEUUID(SERVICE_UUID));  // uncomment this if iOS has problems discovering the service
-  pAdvertising->setScanResponseData(adv2);
-
-  pAdvertising->start();
-
-  BLEScan* pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(false);
-  pBLEScan->start(20);
-
-  Serial.println("Ready");
-  doConnect = true;
+//  BLEDevice::init(DEVICE_NAME);
+//  BLEServer *pServer = BLEDevice::createServer();
+//  pServer->setCallbacks(new MyServerCallbacks());
+//
+//
+//  BLEService *pService = pServer->createService(SERVICE_UUID);
+//
+//  pCharBlink = pService->createCharacteristic(BLINK_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_WRITE);
+//  pCharBlink->setCallbacks(new BlinkCallbacks());
+//  pCharBlink->addDescriptor(new BLE2902());
+//
+//  pCharText = pService->createCharacteristic(TEXT_UUID, BLECharacteristic::PROPERTY_WRITE);
+//  pCharText->setCallbacks(new TextCallbacks());
+//
+//  pService->start();
+//
+//  // ----- Advertising
+//
+//  BLEAdvertising *pAdvertising = pServer->getAdvertising();
+//
+//  BLEAdvertisementData adv;
+//  adv.setName(DEVICE_NAME);
+//  adv.setCompleteServices(BLEUUID(SERVICE_UUID));
+//  pAdvertising->setAdvertisementData(adv);
+//
+//  BLEAdvertisementData adv2;
+//  adv2.setName(DEVICE_NAME);
+//  //  adv.setCompleteServices(BLEUUID(SERVICE_UUID));  // uncomment this if iOS has problems discovering the service
+//  pAdvertising->setScanResponseData(adv2);
+//
+//  pAdvertising->start();
+//
+//  BLEScan* pBLEScan = BLEDevice::getScan();
+//  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+//  pBLEScan->setActiveScan(false);
+//  pBLEScan->start(20);
+//
+//  Serial.println("Ready");
+//  doConnect = true;
 }
 
 void loop() {
 
-  if (doConnect == true) {
-    for(int i=0; i < pServerAddresses.size(); i++){
-      if( connectToServer( *pServerAddresses[i] ) ){
-        Serial.println("- Connect Server Done;");
-      }else{
-        Serial.println("-- Connect Something wrong...;");
-      }
-    }
-    doConnect = false;
-  }
+//  if (doConnect == true) {
+//    for(int i=0; i < pServerAddresses.size(); i++){
+//      if( connectToServer( *pServerAddresses[i] ) ){
+//        Serial.println("- Connect Server Done;");
+//      }else{
+//        Serial.println("-- Connect Something wrong...;");
+//      }
+//    }
+//    doConnect = false;
+//  }
   
-  delay(1000);
+//  delay(1000);
 }
