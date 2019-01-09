@@ -24,6 +24,9 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, PIN_BUTTON, NEO_RGB + NEO_K
 uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
 
+float x = 0.5;
+int cValue = 0;
+
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharText;
 
@@ -93,6 +96,17 @@ void setLed(bool on) {
   strip.show();
   
   pCharBlink->setValue(&ledOn, 1);
+}
+
+float light(float x) {
+  if(x < 0.5){
+    x = x + 2*x*x;
+  } else {
+    x = x - 2*(1.0-x)*(1.0-x);
+  }
+  if(x < 0.005) x = 0.005;
+  if(x > 0.9) x = 0.9;
+  return(x);
 }
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -205,4 +219,18 @@ void loop() {
 //  }
   
 //  delay(1000);
+
+    x = light(x);
+    cValue = (int)(x*255);
+    Serial.println(x);
+    Serial.println(cValue);
+    delay(10);
+    c = strip.Color(cValue, cValue, cValue);
+    for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, c);
+    }
+    delay(1);
+    strip.show();
+    delay((int)random(10, 100));
+    
 }
