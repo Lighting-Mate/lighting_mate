@@ -1,4 +1,3 @@
-//1207デモ用　Bluetooth接続確立時LEDON (LED3個用)　
 #include <string>
 #include <BLEDevice.h>
 #include <BLEServer.h>
