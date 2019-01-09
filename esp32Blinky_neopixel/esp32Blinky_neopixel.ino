@@ -98,7 +98,7 @@ void setLed(bool on) {
   pCharBlink->setValue(&ledOn, 1);
 }
 
-float light(float x) {
+float chaos(float x) {
   if(x < 0.5){
     x = x + 2*x*x;
   } else {
