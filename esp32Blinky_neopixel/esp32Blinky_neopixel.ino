@@ -104,8 +104,8 @@ float chaos(float x) {
   } else {
     x = x - 2*(1.0-x)*(1.0-x);
   }
-  if(x < 0.005) x = 0.005;
-  if(x > 0.9) x = 0.9;
+  if(x < 0.05) x = 0.05;
+  if(x > 0.95) x = 0.95;
   return(x);
 }
 
