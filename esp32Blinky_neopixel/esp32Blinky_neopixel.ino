@@ -66,7 +66,7 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
       BLEAddress *pServerAddress = new BLEAddress(advertisedDevice.getAddress());
       delay(100);
       
-      Serial.print(pServerAddress->toString().c_str());
+      Serial.println(pServerAddress->toString().c_str());
       pServerAddresses.push_back(pServerAddress);
     }
   }
@@ -152,43 +152,13 @@ void setup() {
   strip.show();
 
   BLEDevice::init(DEVICE_NAME);
-  BLEServer *pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
-
-
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-
-  pCharBlink = pService->createCharacteristic(BLINK_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_WRITE);
-  pCharBlink->setCallbacks(new BlinkCallbacks());
-  pCharBlink->addDescriptor(new BLE2902());
-
-  pCharText = pService->createCharacteristic(TEXT_UUID, BLECharacteristic::PROPERTY_WRITE);
-  pCharText->setCallbacks(new TextCallbacks());
-
-  pService->start();
-
-  // ----- Advertising
-
-  BLEAdvertising *pAdvertising = pServer->getAdvertising();
-
-  BLEAdvertisementData adv;
-  adv.setName(DEVICE_NAME);
-  adv.setCompleteServices(BLEUUID(SERVICE_UUID));
-  pAdvertising->setAdvertisementData(adv);
-
-  BLEAdvertisementData adv2;
-  adv2.setName(DEVICE_NAME);
-  //  adv.setCompleteServices(BLEUUID(SERVICE_UUID));  // uncomment this if iOS has problems discovering the service
-  pAdvertising->setScanResponseData(adv2);
-
-  pAdvertising->start();
-
+  
   BLEScan* pBLEScan = BLEDevice::getScan();
   pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
   pBLEScan->setActiveScan(false);
-  pBLEScan->start(20);
+  pBLEScan->start(15);
 
-  Serial.println("Ready");
+  Serial.println("-x- scan over -x-");
   doConnect = true;
 }
 
