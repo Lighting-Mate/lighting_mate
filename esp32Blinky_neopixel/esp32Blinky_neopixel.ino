@@ -18,6 +18,7 @@
 #define LED_NUM 3
 
 static std::vector<BLEAddress*> pServerAddresses;
+static std::vector<BLEClient*> pClients;
 
 static boolean doConnect = false;
 
@@ -37,21 +38,7 @@ bool connectToServer(BLEAddress pAddress) {
     pClient->connect(pAddress);
     Serial.println(" - Connected to server");
 
-    BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
-    if (pRemoteService == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(BLEUUID(SERVICE_UUID).toString().c_str());
-      return false;
-    }
-    Serial.println(" - Found our service");
-
-    BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(TEXT_UUID));
-    if (pRemoteChara == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(BLEUUID(TEXT_UUID).toString().c_str());
-      return false;
-    }
-    Serial.println(" - Found our Characteristic");
+    pClients.push_back(pClient);
 }
 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
@@ -130,12 +117,12 @@ class BlinkCallbacks: public BLECharacteristicCallbacks {
 
 class TextCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-//      std::string value = pCharacteristic->getValue();
-//      Serial.print("Got text value: \"");
-//      for (int i = 0; i < value.length(); i++) {
-//        Serial.print(value[i]);
-//      }
-//      Serial.println("\"");
+      std::string value = pCharacteristic->getValue();
+      Serial.print("Got text value: \"");
+      for (int i = 0; i < value.length(); i++) {
+        Serial.print(value[i]);
+      }
+      Serial.println("\"");
     }
 };
 
@@ -174,6 +161,21 @@ void loop() {
     }
     doConnect = false;
   }
+
+  if ( !pServerAddresses.empty() ) {
+    delay(3000);
+    for( int i=0; i < pClients.size(); i++ ){
+      BLEClient* pClient = pClients[i];
+      
+      BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
+      if (pRemoteService == nullptr) continue;
+  
+      BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(TEXT_UUID));
+      if (pRemoteChara == nullptr) continue;
+      
+      pRemoteChara->writeValue("hello, world?");
+      }
+   }
   
   delay(1000);
 }
