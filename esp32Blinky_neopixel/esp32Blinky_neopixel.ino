@@ -17,61 +17,12 @@
 #define PIN_BUTTON 32
 #define LED_NUM 3
 
-static std::vector<BLEAddress*> pServerAddresses;
-
-static boolean doConnect = false;
-
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, PIN_BUTTON, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
 
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharText;
-
-bool connectToServer(BLEAddress pAddress) {
-    Serial.println(pAddress.toString().c_str());
-    
-    BLEClient*  pClient  = BLEDevice::createClient();
-    Serial.println(" - Created client");
-    
-    pClient->connect(pAddress);
-    Serial.println(" - Connected to server");
-
-    BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
-    if (pRemoteService == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(BLEUUID(SERVICE_UUID).toString().c_str());
-      return false;
-    }
-    Serial.println(" - Found our service");
-
-    BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(TEXT_UUID));
-    if (pRemoteChara == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(BLEUUID(TEXT_UUID).toString().c_str());
-      return false;
-    }
-    Serial.println(" - Found our Characteristic");
-}
-
-class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertisedDevice) {
-    Serial.print("BLE Advertised Device found: ");
-    Serial.println(advertisedDevice.toString().c_str());
-    
-    if (advertisedDevice.haveServiceUUID() && advertisedDevice.getServiceUUID().equals(BLEUUID(SERVICE_UUID))) {
-      Serial.print("Found our device!  address: "); 
-      
-      delay(100);
-      BLEAddress *pServerAddress = new BLEAddress(advertisedDevice.getAddress());
-      delay(100);
-      
-      Serial.print(pServerAddress->toString().c_str());
-      pServerAddresses.push_back(pServerAddress);
-    }
-  }
-}; 
-
 
 void setLed(bool on) {
   if (ledOn == on) {
@@ -183,27 +134,10 @@ void setup() {
 
   pAdvertising->start();
 
-  BLEScan* pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(false);
-  pBLEScan->start(20);
-
   Serial.println("Ready");
-  doConnect = true;
 }
 
 void loop() {
-
-  if (doConnect == true) {
-    for(int i=0; i < pServerAddresses.size(); i++){
-      if( connectToServer( *pServerAddresses[i] ) ){
-        Serial.println("- Connect Server Done;");
-      }else{
-        Serial.println("-- Connect Something wrong...;");
-      }
-    }
-    doConnect = false;
-  }
   
   delay(1000);
 }
