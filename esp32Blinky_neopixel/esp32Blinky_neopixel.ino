@@ -81,12 +81,12 @@ class BlinkCallbacks: public BLECharacteristicCallbacks {
 
 class TextCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-//      std::string value = pCharacteristic->getValue();
-//      Serial.print("Got text value: \"");
-//      for (int i = 0; i < value.length(); i++) {
-//        Serial.print(value[i]);
-//      }
-//      Serial.println("\"");
+      std::string value = pCharacteristic->getValue();
+      Serial.print("Got text value: \"");
+      for (int i = 0; i < value.length(); i++) {
+        Serial.print(value[i]);
+      }
+      Serial.println("\"");
     }
 };
 
