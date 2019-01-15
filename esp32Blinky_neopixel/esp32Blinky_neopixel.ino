@@ -75,28 +75,28 @@ class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
 }; 
 
 
-void setLed(bool on) {
-  if (ledOn == on) {
-    strip.show();
-    return;
-  }
-  
-  ledOn = on;
-  if (ledOn) {
-    Serial.println("LED ON");
-    c = strip.Color(128, 128, 128);
-  } else {
-    Serial.println("LED OFF");
-    c = strip.Color(0, 0, 0);
-  }
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
-  }
-  delay(1);
-  strip.show();
-  
-  pCharBlink->setValue(&ledOn, 1);
-}
+//void setLed(bool on) {
+//  if (ledOn == on) {
+//    strip.show();
+//    return;
+//  }
+//  
+//  ledOn = on;
+//  if (ledOn) {
+//    Serial.println("LED ON");
+//    c = strip.Color(128, 128, 128);
+//  } else {
+//    Serial.println("LED OFF");
+//    c = strip.Color(0, 0, 0);
+//  }
+//  for(uint16_t i=0; i<strip.numPixels(); i++) {
+//    strip.setPixelColor(i, c);
+//  }
+//  delay(1);
+//  strip.show();
+//  
+//  pCharBlink->setValue(&ledOn, 1);
+//}
 
 float chaos(float x) {
   if(x < 0.5){
