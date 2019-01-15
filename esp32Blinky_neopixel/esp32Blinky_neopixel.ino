@@ -104,42 +104,36 @@ float chaos(float x) {
   } else {
     x = x - 2*(1.0-x)*(1.0-x);
   }
-  if(x < 0.05) x = 0.05;
-  if(x > 0.95) x = 0.95;
+  if(x < 0.2) x = 0.2;
+  if(x > 0.8) x = 0.8;
   return(x);
 }
 
 void chaosBlink() {
   x = chaos(x);
-  uint16_t next = (uint16_t)(x*255);
-  uint16_t cnt;
-  int16_t add;
+  uint16_t cnt, i;
+  float add = 1.0;
   
-  if(next > prev) {
-    cnt = next - prev;
-    add = 1;
-  } else {
-    cnt = prev - next;
-    add = -1;
-  }
-  Serial.print(next);
-  Serial.print(prev);
-  Serial.print(add);
-  Serial.println("----");
-  while(cnt > 0) {
-    Serial.println(cValue);
-    cValue = cValue + add;
-    c = strip.Color(cValue, cValue, cValue);
+  Serial.println(x);
+  
+  for(i=0; i<255; i++){
+    c = strip.Color(i, i, i);
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
+      delay(1);
+      strip.show();
+      delay(10*x);
     }
-    delay(1);
-    strip.show();
-    delay(50);
-    cnt--;
   }
-  
-  prev = next;
+  for(i=255; i>0; i--){
+    c = strip.Color(i, i, i);
+    for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, c);
+      delay(1);
+      strip.show();
+      delay(10*x);
+    }
+  }
 }
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -254,5 +248,5 @@ void loop() {
 //  delay(1000);
 
     chaosBlink();
-    delay(1000);
+    delay(random(20,100));
 }
