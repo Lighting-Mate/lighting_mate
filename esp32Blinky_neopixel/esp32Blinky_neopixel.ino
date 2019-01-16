@@ -7,12 +7,11 @@
 #define LED_PIN 32
 #define LED_NUM 3
 
-static boolean doConnect = false;
-
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
 
 float seed = 0.5;
+
 
 
 float chaos(float seed) {
@@ -28,6 +27,7 @@ float chaos(float seed) {
 
 void chaosBlink() {
   seed = chaos(seed); // seed値の更新
+  Serial.println("Seed value:" + String(seed) );
   
   for(uint16_t i=0; i<255; i++){
     c = strip.Color(i, i, i);
@@ -35,8 +35,9 @@ void chaosBlink() {
       strip.setPixelColor(i, c);
     }
     delay(1);
+    touchCallback();
     strip.show();
-    delay(30*x);
+    delay(30*seed);
   }
   for(uint16_t i=255; i>0; i--){
     c = strip.Color(i, i, i);
@@ -44,9 +45,20 @@ void chaosBlink() {
       strip.setPixelColor(i, c);
     }
     delay(1);
+    touchCallback();
     strip.show();
-    delay(30*x);
+    delay(30*seed);
   }
+}
+
+void touchCallback() {
+  int in = analogRead(25);
+  Serial.println("Analog in:" + String(in) );
+  if(in < 4000) {
+    for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, strip.Color(255, 255*0.5, 255*0.8));
+    }
+  } 
 }
 
 
@@ -54,6 +66,7 @@ void chaosBlink() {
 void setup() {  
   Serial.begin(115200);
   delay(500);
+  
   Serial.println("Starting...");
 
   #if defined (__AVR_ATtiny85__)
@@ -62,11 +75,9 @@ void setup() {
   strip.begin();
   delay(1);
   strip.show();
-
 }
 
 void loop() {
-
-    chaosBlink();
-    delay(1000);
+  chaosBlink();
+  delay(1000);
 }
