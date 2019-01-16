@@ -83,26 +83,6 @@ void setLed(bool on) {
   pCharBlink->setValue(&ledOn, 1);
 }
 
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      Serial.println("Connected");
-      ledOn = true;
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(128, 128, 128));
-      }
-      delay(1);
-      strip.show();
-    };
-
-    void onDisconnect(BLEServer* pServer) {
-      Serial.println("Disconnected");
-      ledOn = false;
-      strip.clear();
-      delay(1);
-      strip.show();
-    }
-};
-
 class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
 //      std::string vtext = pCharacteristic->getValue();
