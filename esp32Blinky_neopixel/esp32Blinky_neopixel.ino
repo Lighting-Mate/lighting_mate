@@ -1,205 +1,55 @@
 #include <string>
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
-#define SERVICE_UUID        "7F9B5867-6E4B-4EF8-923F-D32903E1E43C"
-#define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
-#define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
-#define DEVICE_NAME         "ESP_Blinky"
-
 #define LED_PIN 32
 #define LED_NUM 3
-#define PRESSURE_PIN 33
-
-static std::vector<BLEAddress*> pServerAddresses;
 
 static boolean doConnect = false;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
-uint8_t ledOn = false, add = 10, color = 0;
+
+float seed = 0.5;
 
 
-float x = 0.5;
-uint16_t cValue = 0, prev = 0;
-
-BLECharacteristic *pCharBlink;
-BLECharacteristic *pCharText;
-
-bool connectToServer(BLEAddress pAddress) {
-    Serial.println(pAddress.toString().c_str());
-    
-    BLEClient*  pClient  = BLEDevice::createClient();
-    Serial.println(" - Created client");
-    
-    pClient->connect(pAddress);
-    Serial.println(" - Connected to server");
-
-    BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
-    if (pRemoteService == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(BLEUUID(SERVICE_UUID).toString().c_str());
-      return false;
-    }
-    Serial.println(" - Found our service");
-
-    BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(TEXT_UUID));
-    if (pRemoteChara == nullptr) {
-      Serial.print("Failed to find our service UUID: ");
-      Serial.println(BLEUUID(TEXT_UUID).toString().c_str());
-      return false;
-    }
-    Serial.println(" - Found our Characteristic");
-}
-
-class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertisedDevice) {
-    Serial.print("BLE Advertised Device found: ");
-    Serial.println(advertisedDevice.toString().c_str());
-    
-    if (advertisedDevice.haveServiceUUID() && advertisedDevice.getServiceUUID().equals(BLEUUID(SERVICE_UUID))) {
-      Serial.print("Found our device!  address: "); 
-      
-      delay(100);
-      BLEAddress *pServerAddress = new BLEAddress(advertisedDevice.getAddress());
-      delay(100);
-      
-      Serial.print(pServerAddress->toString().c_str());
-      pServerAddresses.push_back(pServerAddress);
-    }
-  }
-}; 
-
-
-//void setLed(bool on) {
-//  if (ledOn == on) {
-//    strip.show();
-//    return;
-//  }
-//  
-//  ledOn = on;
-//  if (ledOn) {
-//    Serial.println("LED ON");
-//    c = strip.Color(128, 128, 128);
-//  } else {
-//    Serial.println("LED OFF");
-//    c = strip.Color(0, 0, 0);
-//  }
-//  for(uint16_t i=0; i<strip.numPixels(); i++) {
-//    strip.setPixelColor(i, c);
-//  }
-//  delay(1);
-//  strip.show();
-//  
-//  pCharBlink->setValue(&ledOn, 1);
-//}
-
-float chaos(float x) {
-  if(x < 0.5){
-    x = x + 2*x*x;
+float chaos(float seed) {
+  if(seed < 0.5){
+    seed = seed + 2*seed*seed;
   } else {
-    x = x - 2*(1.0-x)*(1.0-x);
+    seed = seed - 2*(1.0-seed)*(1.0-seed);
   }
-  if(x < 0.05) x = 0.05;
-  if(x > 0.95) x = 0.95;
-  return(x);
-}
-
-void blink() {
-//  uint8_t cnt = 3;
-//  while(cnt > 0) {
-//    for(uint16_t i=0; i<strip.numPixels(); i++) {
-//      strip.setPixelColor(i, strip.Color(255, 255, 255));
-//    }
-//    delay(1);
-//    strip.show();
-//    delay(5);
-//    for(uint16_t i=0; i<strip.numPixels(); i++) {
-//      strip.setPixelColor(i, strip.Color(0, 0, 0));
-//    }
-//    delay(1);
-//    strip.show();
-//    delay(5);
-//    cnt--;
-//  }
-  Serial.println("Interrupt");
+  if(seed < 0.05) seed = 0.05;
+  if(seed > 0.95) seed = 0.95;
+  return seed;
 }
 
 void chaosBlink() {
-  x = chaos(x);
-  uint16_t cnt, i;
-  float add = 1.0;
+  seed = chaos(seed); // seed値の更新
   
-  Serial.println(x);
-  
-  for(i=0; i<255; i++){
+  for(uint16_t i=0; i<255; i++){
     c = strip.Color(i, i, i);
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
     }
     delay(1);
     strip.show();
-    delay(10*x);
+    delay(30*x);
   }
-  for(i=255; i>0; i--){
+  for(uint16_t i=255; i>0; i--){
     c = strip.Color(i, i, i);
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
     }
     delay(1);
     strip.show();
-    delay(10*x);
+    delay(30*x);
   }
 }
 
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      Serial.println("Connected");
-      ledOn = true;
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(128, 128, 128));
-      }
-      delay(1);
-      strip.show();
-    };
 
-    void onDisconnect(BLEServer* pServer) {
-      Serial.println("Disconnected");
-      ledOn = false;
-      strip.clear();
-      delay(1);
-      strip.show();
-    }
-};
-
-class BlinkCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-//      std::string vtext = pCharacteristic->getValue();
-//      uint8_t value0 = vtext[0];
-//      
-//      strip.setBrightness(value0);
-//      setLed(true);
-//      Serial.print("Got blink value: ");
-//      Serial.println(value0);
-   }
-};
-
-class TextCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-//      std::string value = pCharacteristic->getValue();
-//      Serial.print("Got text value: \"");
-//      for (int i = 0; i < value.length(); i++) {
-//        Serial.print(value[i]);
-//      }
-//      Serial.println("\"");
-    }
-};
 
 void setup() {  
   Serial.begin(115200);
@@ -212,63 +62,10 @@ void setup() {
   strip.begin();
   delay(1);
   strip.show();
-//  attachInterrupt(PRESSURE_PIN, blink, CHANGE);
 
-//  BLEDevice::init(DEVICE_NAME);
-//  BLEServer *pServer = BLEDevice::createServer();
-//  pServer->setCallbacks(new MyServerCallbacks());
-//
-//
-//  BLEService *pService = pServer->createService(SERVICE_UUID);
-//
-//  pCharBlink = pService->createCharacteristic(BLINK_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_WRITE);
-//  pCharBlink->setCallbacks(new BlinkCallbacks());
-//  pCharBlink->addDescriptor(new BLE2902());
-//
-//  pCharText = pService->createCharacteristic(TEXT_UUID, BLECharacteristic::PROPERTY_WRITE);
-//  pCharText->setCallbacks(new TextCallbacks());
-//
-//  pService->start();
-//
-//  // ----- Advertising
-//
-//  BLEAdvertising *pAdvertising = pServer->getAdvertising();
-//
-//  BLEAdvertisementData adv;
-//  adv.setName(DEVICE_NAME);
-//  adv.setCompleteServices(BLEUUID(SERVICE_UUID));
-//  pAdvertising->setAdvertisementData(adv);
-//
-//  BLEAdvertisementData adv2;
-//  adv2.setName(DEVICE_NAME);
-//  //  adv.setCompleteServices(BLEUUID(SERVICE_UUID));  // uncomment this if iOS has problems discovering the service
-//  pAdvertising->setScanResponseData(adv2);
-//
-//  pAdvertising->start();
-//
-//  BLEScan* pBLEScan = BLEDevice::getScan();
-//  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-//  pBLEScan->setActiveScan(false);
-//  pBLEScan->start(20);
-//
-//  Serial.println("Ready");
-//  doConnect = true;
 }
 
 void loop() {
-
-//  if (doConnect == true) {
-//    for(int i=0; i < pServerAddresses.size(); i++){
-//      if( connectToServer( *pServerAddresses[i] ) ){
-//        Serial.println("- Connect Server Done;");
-//      }else{
-//        Serial.println("-- Connect Something wrong...;");
-//      }
-//    }
-//    doConnect = false;
-//  }
-  
-//  delay(1000);
 
     chaosBlink();
     delay(1000);
