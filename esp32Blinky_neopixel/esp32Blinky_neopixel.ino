@@ -26,9 +26,6 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, PIN_BUTTON, NEO_RGB + NEO_K
 uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
 
-BLECharacteristic *pCharBlink;
-BLECharacteristic *pCharText;
-
 bool connectToServer(BLEAddress pAddress) {
     Serial.println(pAddress.toString().c_str());
     
@@ -78,33 +75,9 @@ void setLed(bool on) {
     strip.setPixelColor(i, c);
   }
   delay(1);
-  strip.show();
-  
-  pCharBlink->setValue(&ledOn, 1);
+  strip.show(); 
 }
 
-class BlinkCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-//      std::string vtext = pCharacteristic->getValue();
-//      uint8_t value0 = vtext[0];
-//      
-//      strip.setBrightness(value0);
-//      setLed(true);
-//      Serial.print("Got blink value: ");
-//      Serial.println(value0);
-   }
-};
-
-class TextCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string value = pCharacteristic->getValue();
-      Serial.print("Got text value: \"");
-      for (int i = 0; i < value.length(); i++) {
-        Serial.print(value[i]);
-      }
-      Serial.println("\"");
-    }
-};
 
 void setup() {  
   Serial.begin(115200);
