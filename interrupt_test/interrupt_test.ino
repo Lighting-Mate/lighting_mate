@@ -1,3 +1,12 @@
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+#define LED_PIN 32
+#define LED_NUM 3
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 const byte interruptPin = 25;
 volatile int interruptCounter = 0;
 int numberOfInterrupts = 0;
@@ -17,7 +26,7 @@ void setup() {
 }
 
 void loop() {
-  if(interruptCounter>0){
+  if(interruptCounter){
  
       portENTER_CRITICAL(&mux);
       interruptCounter--;
@@ -27,5 +36,6 @@ void loop() {
       Serial.print("An interrupt has occurred. Total: ");
       Serial.println(numberOfInterrupts);
   }
+  
 
 }

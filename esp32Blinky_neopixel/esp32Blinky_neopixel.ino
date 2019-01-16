@@ -15,6 +15,7 @@
 
 #define LED_PIN 32
 #define LED_NUM 3
+#define PRESSURE_PIN 33
 
 static std::vector<BLEAddress*> pServerAddresses;
 
@@ -23,6 +24,7 @@ static boolean doConnect = false;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
 uint8_t ledOn = false, add = 10, color = 0;
+
 
 float x = 0.5;
 uint16_t cValue = 0, prev = 0;
@@ -104,9 +106,29 @@ float chaos(float x) {
   } else {
     x = x - 2*(1.0-x)*(1.0-x);
   }
-  if(x < 0.2) x = 0.2;
-  if(x > 0.8) x = 0.8;
+  if(x < 0.05) x = 0.05;
+  if(x > 0.95) x = 0.95;
   return(x);
+}
+
+void blink() {
+//  uint8_t cnt = 3;
+//  while(cnt > 0) {
+//    for(uint16_t i=0; i<strip.numPixels(); i++) {
+//      strip.setPixelColor(i, strip.Color(255, 255, 255));
+//    }
+//    delay(1);
+//    strip.show();
+//    delay(5);
+//    for(uint16_t i=0; i<strip.numPixels(); i++) {
+//      strip.setPixelColor(i, strip.Color(0, 0, 0));
+//    }
+//    delay(1);
+//    strip.show();
+//    delay(5);
+//    cnt--;
+//  }
+  Serial.println("Interrupt");
 }
 
 void chaosBlink() {
@@ -120,19 +142,19 @@ void chaosBlink() {
     c = strip.Color(i, i, i);
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
-      delay(1);
-      strip.show();
-      delay(10*x);
     }
+    delay(1);
+    strip.show();
+    delay(10*x);
   }
   for(i=255; i>0; i--){
     c = strip.Color(i, i, i);
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
-      delay(1);
-      strip.show();
-      delay(10*x);
     }
+    delay(1);
+    strip.show();
+    delay(10*x);
   }
 }
 
@@ -190,6 +212,7 @@ void setup() {
   strip.begin();
   delay(1);
   strip.show();
+//  attachInterrupt(PRESSURE_PIN, blink, CHANGE);
 
 //  BLEDevice::init(DEVICE_NAME);
 //  BLEServer *pServer = BLEDevice::createServer();
@@ -248,5 +271,5 @@ void loop() {
 //  delay(1000);
 
     chaosBlink();
-    delay(random(20,100));
+    delay(1000);
 }
