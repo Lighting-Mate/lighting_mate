@@ -174,8 +174,8 @@ void loop() {
       if (pRemoteChara == nullptr) continue;
       
       pRemoteChara->writeValue("hello, world?");
-      }
-   }
+    }
+  }
   
   delay(1000);
 }
