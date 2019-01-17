@@ -1,83 +1,101 @@
-//1207デモ用　Bluetooth接続確立時LEDON (LED3個用)　
-#include <string>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
-#include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-  #include <avr/power.h>
-#endif
 
 #define SERVICE_UUID        "7F9B5867-6E4B-4EF8-923F-D32903E1E43C"
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
 #define DEVICE_NAME         "ESP_Blinky"
 
-#define PIN_BUTTON 32
-#define LED_NUM 3
-
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, PIN_BUTTON, NEO_RGB + NEO_KHZ800);
-uint32_t c = strip.Color(0, 0, 0);
-uint8_t ledOn = false, add = 10, color = 0;
-
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharText;
 
-void setLed(bool on) {
-  if (ledOn == on) {
-    strip.show();
-    return;
-  }
-  
-  ledOn = on;
-  if (ledOn) {
-    Serial.println("LED ON");
-    c = strip.Color(128, 128, 128);
+
+#include <string>
+#include <Adafruit_NeoPixel.h>
+#ifdef __AVR__
+  #include <avr/power.h>
+#endif
+
+#define LED_PIN 32
+#define LED_NUM 3
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
+uint32_t c = strip.Color(0, 0, 0);
+
+float seed = 0.5;
+
+float chaos(float seed) {
+  if(seed < 0.5){
+    seed = seed + 2*seed*seed;
   } else {
-    Serial.println("LED OFF");
-    c = strip.Color(0, 0, 0);
+    seed = seed - 2*(1.0-seed)*(1.0-seed);
   }
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
-  }
-  delay(1);
-  strip.show();
-  
-  pCharBlink->setValue(&ledOn, 1);
+  if(seed < 0.05) seed = 0.05;
+  if(seed > 0.95) seed = 0.95;
+  return seed;
 }
 
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      Serial.println("Connected");
-      ledOn = true;
+void chaosBlink() {
+  seed = chaos(seed); // seed値の更新
+  Serial.println("Seed value:" + String(seed) );
+  
+  for(uint16_t i=0; i<255; i++){
+    c = strip.Color(i, i, i);
+    for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, c);
+    }
+    delay(1);
+    if( touchCallback() ) return;
+    strip.show();
+    delay(30*seed);
+  }
+  for(uint16_t i=255; i>0; i--){
+    c = strip.Color(i, i, i);
+    for(uint16_t i=0; i<strip.numPixels(); i++) {
+      strip.setPixelColor(i, c);
+    }
+    delay(1);
+    if( touchCallback() ) return;
+    strip.show();
+    delay(30*seed);
+  }
+}
+
+bool touchCallback() {
+  int in = analogRead(25);
+//  Serial.println("Analog in:" + String(in) );
+  if(in > 4000) return false;
+
+  for(int j=0; j<3; j++){
+    for(uint16_t i=0; i<255; i++){
+      c = strip.Color(i, i, i);
       for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(128, 128, 128));
+        strip.setPixelColor(i, c);
       }
       delay(1);
       strip.show();
-    };
-
-    void onDisconnect(BLEServer* pServer) {
-      Serial.println("Disconnected");
-      ledOn = false;
-      strip.clear();
+      delay(0.01);
+    }
+    for(uint16_t i=255; i>0; i--){
+      c = strip.Color(i, i, i);
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, c);
+      }
       delay(1);
       strip.show();
+      delay(0.01);
     }
-};
+  }
+  return true;
+}
 
 class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
-//      std::string vtext = pCharacteristic->getValue();
-//      uint8_t value0 = vtext[0];
-//      
-//      strip.setBrightness(value0);
-//      setLed(true);
-//      Serial.print("Got blink value: ");
-//      Serial.println(value0);
-   }
+    }
 };
+
 
 class TextCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
@@ -90,9 +108,21 @@ class TextCallbacks: public BLECharacteristicCallbacks {
     }
 };
 
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+      Serial.println("Connected");
+    };
+
+    void onDisconnect(BLEServer* pServer) {
+      Serial.println("Disconnected");
+    }
+};
+
+
 void setup() {  
   Serial.begin(115200);
   delay(500);
+  
   Serial.println("Starting...");
 
   #if defined (__AVR_ATtiny85__)
@@ -138,6 +168,6 @@ void setup() {
 }
 
 void loop() {
-  
-  delay(1000);
+  chaosBlink();
+  delay(50);
 }
