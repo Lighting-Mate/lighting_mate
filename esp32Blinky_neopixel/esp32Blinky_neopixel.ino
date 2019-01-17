@@ -65,7 +65,7 @@ void chaosBlink() {
 
 bool touchCallback() {
   int in = analogRead(33);
-  Serial.println("Analog in:" + String(in) );
+//  Serial.println("Analog in:" + String(in) );
   if(in < 500) return false;
 
   for(int j=0; j<3; j++){
@@ -103,6 +103,29 @@ class TextCallbacks: public BLECharacteristicCallbacks {
       Serial.print("Got text value: \"");
       for (int i = 0; i < value.length(); i++) {
         Serial.print(value[i]);
+      }
+
+      if(value == "lighton"){
+        for(int j=0; j<3; j++){
+          for(uint16_t i=0; i<255; i++){
+            c = strip.Color(i, i, i);
+            for(uint16_t i=0; i<strip.numPixels(); i++) {
+              strip.setPixelColor(i, c);
+            }
+            delay(1);
+            strip.show();
+            delay(0.01);
+          }
+          for(uint16_t i=255; i>0; i--){
+            c = strip.Color(i, i, i);
+            for(uint16_t i=0; i<strip.numPixels(); i++) {
+              strip.setPixelColor(i, c);
+            }
+            delay(1);
+            strip.show();
+            delay(0.01);
+          }
+        }
       }
       Serial.println("\"");
     }
