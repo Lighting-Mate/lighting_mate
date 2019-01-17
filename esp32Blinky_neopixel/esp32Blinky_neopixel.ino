@@ -35,7 +35,7 @@ void chaosBlink() {
       strip.setPixelColor(i, c);
     }
     delay(1);
-    touchCallback();
+    if( touchCallback() ) return;
     strip.show();
     delay(30*seed);
   }
@@ -45,20 +45,38 @@ void chaosBlink() {
       strip.setPixelColor(i, c);
     }
     delay(1);
-    touchCallback();
+    if( touchCallback() ) return;
     strip.show();
     delay(30*seed);
   }
 }
 
-void touchCallback() {
+bool touchCallback() {
   int in = analogRead(25);
   Serial.println("Analog in:" + String(in) );
-  if(in < 4000) {
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, strip.Color(255, 255*0.5, 255*0.8));
+  if(in > 4000) return false;
+
+  for(int j=0; j<3; j++){
+    for(uint16_t i=0; i<255; i++){
+      c = strip.Color(i, i, i);
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, c);
+      }
+      delay(1);
+      strip.show();
+      delay(0.01);
     }
-  } 
+    for(uint16_t i=255; i>0; i--){
+      c = strip.Color(i, i, i);
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, c);
+      }
+      delay(1);
+      strip.show();
+      delay(0.01);
+    }
+  }
+  return true;
 }
 
 
@@ -79,5 +97,5 @@ void setup() {
 
 void loop() {
   chaosBlink();
-  delay(1000);
+  delay(50);
 }
