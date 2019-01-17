@@ -71,7 +71,7 @@ float chaos(float seed) {
 
 void chaosBlink() {
   seed = chaos(seed); // seed値の更新
-  Serial.println("Seed value:" + String(seed) );
+//  Serial.println("Seed value:" + String(seed) );
   
   for(uint16_t i=0; i<255; i++){
     c = strip.Color(i, i, i);
@@ -98,9 +98,9 @@ void chaosBlink() {
 }
 
 bool touchCallback() {
-  int in = analogRead(25);
-  Serial.println("Analog in:" + String(in) );
-  if(in > 4000) return false;
+  int in = analogRead(33);
+//  Serial.println("Analog in:" + String(in) );
+  if(in < 500) return false;
 
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
