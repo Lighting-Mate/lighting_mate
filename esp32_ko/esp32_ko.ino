@@ -88,11 +88,17 @@ bool touchCallback() {
       delay(0.01);
     }
   }
+  pCharBlink->setValue("checker");
   return true;
 }
 
 class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
+    }
+
+    void onRead(BLECharacteristic *pCharacteristic) {
+      pCharacteristic->setValue("read done");
+      Serial.println("\"");
     }
 };
 
