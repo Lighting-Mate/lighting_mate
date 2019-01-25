@@ -80,6 +80,7 @@ void chaosBlink() {
     }
     delay(1);
     if( touchCallback() ) return;
+    if( readCallback() ) return;
     strip.show();
     delay(30*seed);
   }
@@ -90,6 +91,7 @@ void chaosBlink() {
     }
     delay(1);
     if( touchCallback() ) return;
+    if( readCallback() ) return;
     strip.show();
     delay(30*seed);
   }
@@ -137,6 +139,50 @@ bool touchCallback() {
     }
   }
   return true;
+}
+
+
+bool readCallback() {
+  if ( !pServerAddresses.empty() ) {
+    for( int i=0; i < pClients.size(); i++ ){
+      BLEClient* pClient = pClients[i];
+      
+      BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
+      if (pRemoteService == nullptr) continue;
+  
+      BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(BLINK_UUID));
+      if (pRemoteChara == nullptr) continue;
+      
+      std::string value = pRemoteChara->readValue();
+      std::string checkStr = "BlinkStr is:" + value;
+      Serial.println(checkStr.c_str());
+
+      if( value == "checker"){
+        for(int j=0; j<3; j++){
+          for(uint16_t i=0; i<255; i++){
+            c = strip.Color(i, i, i);
+            for(uint16_t i=0; i<strip.numPixels(); i++) {
+              strip.setPixelColor(i, c);
+            }
+            delay(1);
+            strip.show();
+            delay(0.01);
+          }
+          for(uint16_t i=255; i>0; i--){
+            c = strip.Color(i, i, i);
+            for(uint16_t i=0; i<strip.numPixels(); i++) {
+              strip.setPixelColor(i, c);
+            }
+            delay(1);
+            strip.show();
+            delay(0.01);
+          }
+        }
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 
