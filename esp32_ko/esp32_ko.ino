@@ -68,26 +68,8 @@ bool touchCallback() {
 //  Serial.println("Analog in:" + String(in) );
   if(in < 500) return false;
 
-  for(int j=0; j<3; j++){
-    for(uint16_t i=0; i<255; i++){
-      c = strip.Color(i, i, i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
-      }
-      delay(1);
-      strip.show();
-      delay(0.01);
-    }
-    for(uint16_t i=255; i>0; i--){
-      c = strip.Color(i, i, i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
-      }
-      delay(1);
-      strip.show();
-      delay(0.01);
-    }
-  }
+  touchLighting();
+  
   pCharBlink->setValue("checker");
   return true;
 }
@@ -112,26 +94,7 @@ class TextCallbacks: public BLECharacteristicCallbacks {
       }
 
       if(value == "lighton"){
-        for(int j=0; j<3; j++){
-          for(uint16_t i=0; i<255; i++){
-            c = strip.Color(i, i, i);
-            for(uint16_t i=0; i<strip.numPixels(); i++) {
-              strip.setPixelColor(i, c);
-            }
-            delay(1);
-            strip.show();
-            delay(0.01);
-          }
-          for(uint16_t i=255; i>0; i--){
-            c = strip.Color(i, i, i);
-            for(uint16_t i=0; i<strip.numPixels(); i++) {
-              strip.setPixelColor(i, c);
-            }
-            delay(1);
-            strip.show();
-            delay(0.01);
-          }
-        }
+        touchLighting();
       }
       Serial.println("\"");
     }
@@ -146,6 +109,31 @@ class MyServerCallbacks: public BLEServerCallbacks {
       Serial.println("Disconnected");
     }
 };
+
+
+// タッチされた時の光り方を制御している関数
+void touchLighting() {
+  for(int j=0; j<3; j++){
+    for(uint16_t i=0; i<255; i++){
+      c = strip.Color(i, i, i);
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, c);
+      }
+      delay(1);
+      strip.show();
+      delay(0.01);
+    }
+    for(uint16_t i=255; i>0; i--){
+      c = strip.Color(i, i, i);
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, c);
+      }
+      delay(1);
+      strip.show();
+      delay(0.01);
+    }
+  }
+}
 
 
 void setup() {  
