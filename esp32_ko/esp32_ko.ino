@@ -37,12 +37,21 @@ float chaos(float seed) {
   return seed;
 }
 
+uint8_t randomColor() {
+  uint8_t c;
+  c = random(4,11);
+  Serial.println("value:" + String(c) );
+  return(c);
+}
+
 void chaosBlink() {
   seed = chaos(seed); // seed値の更新
   Serial.println("Seed value:" + String(seed) );
-  
+  uint8_t r = randomColor();
+  uint8_t b = randomColor();
+  uint8_t g = randomColor();
   for(uint16_t i=0; i<255; i++){
-    c = strip.Color(i, i, i);
+    c = strip.Color((int)(i * r/10), (int)(i * g/10), (int)(i * b/10));
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
     }
@@ -52,7 +61,7 @@ void chaosBlink() {
     delay(30*seed);
   }
   for(uint16_t i=255; i>0; i--){
-    c = strip.Color(i, i, i);
+    c = strip.Color((int)(i * r/10), (int)(i * g/10), (int)(i * b/10));
     for(uint16_t i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, c);
     }
@@ -186,5 +195,10 @@ void setup() {
 
 void loop() {
   chaosBlink();
-  delay(50);
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, strip.Color(0, 0, 0));
+  }
+  delay(1);
+  strip.show();
+  delay(500);
 }
