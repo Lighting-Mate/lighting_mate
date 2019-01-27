@@ -6,6 +6,8 @@
 #define SERVICE_UUID        "7F9B5867-6E4B-4EF8-923F-D32903E1E43C"
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
+#define SMART_SERVICE_UUID  "06E17ABD-F5EB-4980-BBED-2E67F1664628"
+#define SMART_CHARA_UUID    "33AD1DB5-C067-4E8C-95C6-6804EB95BE96"
 #define DEVICE_NAME         "ESP_Blinky"
 
 
@@ -109,6 +111,64 @@ bool readCallback() {
   return false;
 }
 
+class MyServerCallbacks: public BLEServerCallbacks {
+    void onConnect(BLEServer* pServer) {
+      Serial.println("Connected");
+    };
+    void onDisconnect(BLEServer* pServer) {
+      Serial.println("Disconnected");
+    }
+};
+
+class Colors {
+  public:
+  uint8_t color[3]; 
+  Colors(String value){
+    for (int i = 0; i < 3; i++) {
+      String tmp = String(value[i*2]) + String(value[i*2+1]);
+      color[i] = atof( ("0x"+tmp).c_str());
+    }  
+  };
+  uint8_t getRed(){ return color[0]; }
+  uint8_t getGreen(){ return color[1]; }
+  uint8_t getBlue(){ return color[2]; }
+};
+
+
+class smartCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
+      std::string value = pCharacteristic->getValue();
+      Serial.print("Get smart value: \"");
+      for (int i = 0; i < value.length(); i++) {
+        Serial.print(value[i]);
+      }
+      Serial.println("\"");
+
+      Colors colors = Colors("0000FF");
+      for(int j=0; j<3; j++){
+        for(uint16_t i=0; i<255; i++){
+          c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
+          for(uint16_t i=0; i<strip.numPixels(); i++) {
+            strip.setPixelColor(i, c);
+          }
+          delay(1);
+          strip.show();
+        }
+        for(uint16_t i=255; i>0; i--){
+          c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
+          for(uint16_t i=0; i<strip.numPixels(); i++) {
+            strip.setPixelColor(i, c);
+          }
+          delay(1);
+          strip.show();
+        }
+      }
+    }
+
+    void onRead(BLECharacteristic *pCharacteristic) {
+    }
+  }
+};
 
 void setup() {  
   Serial.begin(115200);
@@ -131,6 +191,43 @@ void setup() {
   pBLEScan->start(15);
 
   Serial.println("-x- scan over -x-");
+
+
+
+////////// This is server code //////////
+
+  BLEServer *pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+  BLEService *pService = pServer->createService(SMART_SERVICE_UUID);
+
+  BLECharacteristic *pCharSmart;
+  pCharSmart = pService->createCharacteristic(SMART_CHARA_UUID, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_WRITE);
+  pCharSmart->setCallbacks(new smartCallbacks());
+  pCharSmart->addDescriptor(new BLE2902());
+
+  pService->start();
+
+  BLEAdvertising *pAdvertising = pServer->getAdvertising();
+
+  BLEAdvertisementData adv;
+  adv.setName(DEVICE_NAME);
+  adv.setCompleteServices(BLEUUID(SMART_SERVICE_UUID));
+  pAdvertising->setAdvertisementData(adv);
+
+  BLEAdvertisementData adv2;
+  adv2.setName(DEVICE_NAME);
+  //  adv.setCompleteServices(BLEUUID(SERVICE_UUID));  // uncomment this if iOS has problems discovering the service
+  pAdvertising->setScanResponseData(adv2);
+
+  pAdvertising->start();
+
+  Serial.println("Ready");
+  double v = atof("0xFFFFFF");
+  Serial.println(v);
+  
+
+////////// Server code end //////////
+  
   doConnect = true;
 }
 
