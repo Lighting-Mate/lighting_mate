@@ -136,37 +136,36 @@ class Colors {
 
 
 class smartCallbacks: public BLECharacteristicCallbacks {
-    void onWrite(BLECharacteristic *pCharacteristic) {
-      std::string value = pCharacteristic->getValue();
-      Serial.print("Get smart value: \"");
-      for (int i = 0; i < value.length(); i++) {
-        Serial.print(value[i]);
-      }
-      Serial.println("\"");
+  void onWrite(BLECharacteristic *pCharacteristic) {
+    std::string value = pCharacteristic->getValue();
+    Serial.print("Get smart value: \"");
+    for (int i = 0; i < value.length(); i++) {
+      Serial.print(value[i]);
+    }
+    Serial.println("\"");
 
-      Colors colors = Colors("0000FF");
-      for(int j=0; j<3; j++){
-        for(uint16_t i=0; i<255; i++){
-          c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
-          for(uint16_t i=0; i<strip.numPixels(); i++) {
-            strip.setPixelColor(i, c);
-          }
-          delay(1);
-          strip.show();
+    Colors colors = Colors("0000FF");
+    for(int j=0; j<3; j++){
+      for(uint16_t i=0; i<255; i++){
+        c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
+        for(uint16_t i=0; i<strip.numPixels(); i++) {
+          strip.setPixelColor(i, c);
         }
-        for(uint16_t i=255; i>0; i--){
-          c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
-          for(uint16_t i=0; i<strip.numPixels(); i++) {
-            strip.setPixelColor(i, c);
-          }
-          delay(1);
-          strip.show();
+        delay(1);
+        strip.show();
+      }
+      for(uint16_t i=255; i>0; i--){
+        c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
+        for(uint16_t i=0; i<strip.numPixels(); i++) {
+          strip.setPixelColor(i, c);
         }
+        delay(1);
+        strip.show();
       }
     }
+  }
 
-    void onRead(BLECharacteristic *pCharacteristic) {
-    }
+  void onRead(BLECharacteristic *pCharacteristic) {
   }
 };
 
