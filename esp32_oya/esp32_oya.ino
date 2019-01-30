@@ -24,11 +24,26 @@ static std::vector<BLEAddress*> pServerAddresses;
 static std::vector<BLEClient*> pClients;
 
 static boolean doConnect = false;
+static boolean doSmartInterrupt = false;
+std::string state = "FFFFFF";
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
 float seed = 0.5;
 
+class Colors {
+  public:
+  uint16_t color[3]; 
+  Colors(String value){
+    for (int i = 0; i < 3; i++) {
+      String tmp = String(value[i*2]) + String(value[i*2+1]);
+      color[i] = atof( ("0x"+tmp).c_str());
+    }  
+  };
+  uint16_t getRed(){ return color[0]; }
+  uint16_t getGreen(){ return color[1]; }
+  uint16_t getBlue(){ return color[2]; }
+};
 
 bool connectToServer(BLEAddress pAddress) {
     Serial.println(pAddress.toString().c_str());
@@ -120,54 +135,51 @@ class MyServerCallbacks: public BLEServerCallbacks {
     }
 };
 
-class Colors {
-  public:
-  uint8_t color[3]; 
-  Colors(String value){
-    for (int i = 0; i < 3; i++) {
-      String tmp = String(value[i*2]) + String(value[i*2+1]);
-      color[i] = atof( ("0x"+tmp).c_str());
-    }  
-  };
-  uint8_t getRed(){ return color[0]; }
-  uint8_t getGreen(){ return color[1]; }
-  uint8_t getBlue(){ return color[2]; }
-};
-
 
 class smartCallbacks: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) {
     std::string value = pCharacteristic->getValue();
+    state = value;
     Serial.print("Get smart value: \"");
     for (int i = 0; i < value.length(); i++) {
       Serial.print(value[i]);
     }
     Serial.println("\"");
-
-    Colors colors = Colors("0000FF");
-    for(int j=0; j<3; j++){
-      for(uint16_t i=0; i<255; i++){
-        c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
-        for(uint16_t i=0; i<strip.numPixels(); i++) {
-          strip.setPixelColor(i, c);
-        }
-        delay(1);
-        strip.show();
-      }
-      for(uint16_t i=255; i>0; i--){
-        c = strip.Color(colors.getRed()/255*i, colors.getGreen()/255*i, colors.getBlue()/255*i);
-        for(uint16_t i=0; i<strip.numPixels(); i++) {
-          strip.setPixelColor(i, c);
-        }
-        delay(1);
-        strip.show();
-      }
-    }
+    doSmartInterrupt = true;
   }
 
   void onRead(BLECharacteristic *pCharacteristic) {
   }
 };
+
+
+bool smartInterruptCallback(){
+  if( !doSmartInterrupt )return false;
+  
+  Colors colors = Colors( String(state.c_str()) );
+  for(int j=0; j<3; j++){
+    for(uint16_t i=0; i<255; i++){
+      c = strip.Color(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, c);
+      }
+      delay(1);
+      strip.show();
+      delay(0.01);
+    }
+    for(uint16_t i=255; i>0; i--){
+      c = strip.Color(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, c);
+      }
+      delay(1);
+      strip.show();
+      delay(0.01);
+    }
+  }
+  doSmartInterrupt = false;
+  return true;
+}
 
 void setup() {  
   Serial.begin(115200);
@@ -221,10 +233,7 @@ void setup() {
   pAdvertising->start();
 
   Serial.println("Ready");
-  double v = atof("0xFFFFFF");
-  Serial.println(v);
   
-
 ////////// Server code end //////////
   
   doConnect = true;
