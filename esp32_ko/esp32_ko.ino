@@ -19,7 +19,7 @@ BLECharacteristic *pCharText;
 #endif
 
 #define LED_PIN 32
-#define LED_NUM 3
+#define LED_NUM 5
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
@@ -39,15 +39,66 @@ float chaos(float seed) {
 
 uint8_t randomColor() {
   uint8_t c;
-  c = random(4,11);
-  Serial.println("value:" + String(c) );
+  c = random(4,10);
+//  Serial.println("value:" + String(c) );
   return(c);
+}
+
+void twoColorGradation(uint32_t mycolor, uint32_t othercolor)
+{
+  uint8_t myr = mycolor & 0xFF0000;
+  uint8_t myg = mycolor & 0x00FF00;
+  uint8_t myb = mycolor & 0x0000FF;
+  
+  uint8_t otr = othercolor & 0xFF0000;
+  uint8_t otg = othercolor & 0x00FF00;
+  uint8_t otb = othercolor & 0x0000FF;
+
+  Serial.println(String(myr) + "  " + String(myg) + "  " + String(myb));
+  double r, g, b;
+  int dif = 250;
+
+  if(myr > otr) {
+    r = (myr - otr)/dif;
+  } else {
+    r = (otr - myr)/dif;
+  }
+  if(myg > otg) {
+    g = (myg - otg)/dif;
+  } else {
+    g = (otg - myg)/dif;
+  }
+  if(myb > otb) {
+    b = (myb - otb)/dif;
+  } else {
+    b = (otb - myb)/dif;
+  }
+  Serial.println("r_diff: " + String((myr - otr)/dif) + " g_diff: " + String(g) + " b_diff: " + String(b));
+
+  for(uint8_t i=0; i<dif; i++) {
+    uint32_t c = strip.Color(myr + i*r, myg + i*g, myb + i*b);
+    for(uint8_t j=0; j<strip.numPixels(); j++) {
+      strip.setPixelColor(i, c);
+    }
+    delay(1);
+    strip.show();
+    delay(10);
+  }
+  for(uint8_t i=dif; i>0; i++) {
+    uint32_t c = strip.Color(myr + i*r, myg + i*g, myb + i*b);
+    for(uint8_t j=0; j<strip.numPixels(); j++) {
+      strip.setPixelColor(i, c);
+    }
+    delay(1);
+    strip.show();
+    delay(10);
+  }
 }
 
 void chaosBlink() {
   seed = chaos(seed); // seed値の更新
   Serial.println("Seed value:" + String(seed) );
-  uint8_t r = randomColor();
+  uint8_t r = 10;
   uint8_t b = randomColor();
   uint8_t g = randomColor();
   for(uint16_t i=0; i<255; i++){
@@ -75,6 +126,7 @@ void chaosBlink() {
 bool touchCallback() {
   int in = analogRead(33);
 //  Serial.println("Analog in:" + String(in) );
+  return false;
   if(in < 500) return false;
 
   touchLighting();
@@ -194,7 +246,12 @@ void setup() {
 }
 
 void loop() {
-  chaosBlink();
+//  chaosBlink();
+//  uint32_t mycolor = strip.Color(255*randomColor(),  255*randomColor(),  255*randomColor());
+  uint32_t mycolor = strip.Color(100,  150,  250);
+  uint32_t othercolor = strip.Color(255*randomColor(),  255*randomColor(),  255*randomColor());
+  Serial.println("mycolor: " + String(mycolor) + "  othercolor: " + String(othercolor));
+  twoColorGradation(mycolor, othercolor);
   for(uint16_t i=0; i<strip.numPixels(); i++) {
         strip.setPixelColor(i, strip.Color(0, 0, 0));
   }
