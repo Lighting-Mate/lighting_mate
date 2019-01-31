@@ -68,3 +68,42 @@ void touchLighting() {
     }
   }
 }
+
+// ２色与えるとグラデーション発光する
+void twoColorGradation(Colors myColor, Colors otherColor)
+{
+  uint8_t myr = myColor.getRed();
+  uint8_t myg = myColor.getGreen();
+  uint8_t myb = myColor.getBlue();
+  
+  int r, g, b;
+
+  r = (otherColor.getRed() - myColor.getRed());
+  g = (otherColor.getGreen() - myColor.getGreen());
+  b = (otherColor.getBlue() - myColor.getBlue() );
+
+  Serial.println("r_diff: " + String(r) + " g_diff: " + String(g) + " b_diff: " + String(b));
+
+  for(uint16_t i=0; i<255; i++) {
+    uint32_t c = strip.Color((uint8_t)myr + r*i/255.0, (uint8_t)myg + g*i/255.0,  (uint8_t)myb + b*i/255.0);
+    Serial.println((uint8_t)myr + r*i/255.0);
+    for(uint16_t j=0; j<strip.numPixels(); j++) {
+        strip.setPixelColor(j, c);
+    }
+    strip.setBrightness( i );
+    delay(1);
+    strip.show();
+    delay(10);
+  }
+  for(uint16_t i=255; i>0; i--) {
+    uint32_t c = strip.Color((uint8_t)myr + r*i/255.0, (uint8_t)myg + g*i/255.0,  (uint8_t)myb + b*i/255.0);
+    Serial.println((uint8_t)myr + r*i/255.0);
+    for(uint16_t j=0; j<strip.numPixels(); j++) {
+        strip.setPixelColor(j, c);
+    }
+    strip.setBrightness( i );
+    delay(1);
+    strip.show();
+    delay(10);
+  }
+}

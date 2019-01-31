@@ -18,7 +18,7 @@
 #endif
 
 #define LED_PIN 32
-#define LED_NUM 3
+#define LED_NUM 5
 
 class Colors {
   public:
@@ -35,7 +35,7 @@ class Colors {
     int randIndex = random(3);   // 0 ~ 2
     Serial.println( randIndex );
     for (int i = 0; i < 3; i++) {
-      int randNumber = i == randIndex ? random(50, 150) : random(50, 256);
+      int randNumber = i == randIndex ? random(127, 256) : random(50, 150);
       color[i] = randNumber;
     } 
   };
@@ -52,6 +52,9 @@ static boolean doConnect = false;
 static boolean doSmartInterrupt = false;
 std::string state = "FFFFFF";
 static Colors stateColor = Colors(); // 固有色
+
+static Colors myColor = Colors();
+static Colors otherColor = Colors();
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
@@ -208,10 +211,10 @@ void setup() {
 
   BLEDevice::init(DEVICE_NAME);
   
-  BLEScan* pBLEScan = BLEDevice::getScan();
-  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-  pBLEScan->setActiveScan(false);
-  pBLEScan->start(15);
+//  BLEScan* pBLEScan = BLEDevice::getScan();
+//  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+//  pBLEScan->setActiveScan(false);
+//  pBLEScan->start(15);
 
   Serial.println("-x- scan over -x-");
 
@@ -252,7 +255,8 @@ void setup() {
 }
 
 void loop() {
-  chaosBlink();
+//  chaosBlink();
+  twoColorGradation(myColor, otherColor);
 
   if (doConnect == true) {
     for(int i=0; i < pServerAddresses.size(); i++){
