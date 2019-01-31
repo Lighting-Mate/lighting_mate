@@ -13,7 +13,7 @@ void chaosBlink() {
   seed = chaos(seed); // seed値の更新
 //  Serial.println("Seed value:" + String(seed) );
    
-  Colors colors = Colors( "FFFFFF" );
+  Colors colors = stateColor;
   //  選択した色をそのまま反映させ続けたい場合は下記のコードに変更。
   //  Colors colors = Colors( String(state.c_str()) );
   
@@ -49,7 +49,7 @@ void chaosBlink() {
 void touchLighting() {
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
-      c = strip.Color(i, i, i);
+      c = strip.Color(stateColor.getRed()/255.0*i, stateColor.getGreen()/255.0*i, stateColor.getBlue()/255.0*i);
       for(uint16_t i=0; i<strip.numPixels(); i++) {
         strip.setPixelColor(i, c);
       }
@@ -58,7 +58,7 @@ void touchLighting() {
       delay(0.01);
     }
     for(uint16_t i=255; i>0; i--){
-      c = strip.Color(i, i, i);
+      c = strip.Color(stateColor.getRed()/255.0*i, stateColor.getGreen()/255.0*i, stateColor.getBlue()/255.0*i);
       for(uint16_t i=0; i<strip.numPixels(); i++) {
         strip.setPixelColor(i, c);
       }

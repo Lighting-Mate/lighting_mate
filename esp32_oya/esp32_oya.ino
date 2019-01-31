@@ -51,6 +51,7 @@ static std::vector<BLEClient*> pClients;
 static boolean doConnect = false;
 static boolean doSmartInterrupt = false;
 std::string state = "FFFFFF";
+static Colors stateColor = Colors(); // 固有色
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
