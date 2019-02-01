@@ -52,9 +52,9 @@ static boolean doConnect = false;
 static boolean doSmartInterrupt = false;
 std::string state = "FFFFFF";
 static Colors stateColor = Colors(); // 固有色
+static Colors otherColor = Colors(); // 相手の固有色
+static boolean turn = false; // 発光回数の偶奇を通知 
 
-static Colors myColor = Colors();
-static Colors otherColor = Colors();
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
 uint32_t c = strip.Color(0, 0, 0);
@@ -178,6 +178,7 @@ bool smartInterruptCallback(){
       for(uint16_t i=0; i<strip.numPixels(); i++) {
         strip.setPixelColor(i, c);
       }
+      strip.setBrightness( i );
       delay(1);
       strip.show();
       delay(0.01);
@@ -187,6 +188,7 @@ bool smartInterruptCallback(){
       for(uint16_t i=0; i<strip.numPixels(); i++) {
         strip.setPixelColor(i, c);
       }
+      strip.setBrightness( i );
       delay(1);
       strip.show();
       delay(0.01);
@@ -255,9 +257,9 @@ void setup() {
 }
 
 void loop() {
-//  chaosBlink();
-  twoColorGradation(myColor, otherColor);
-
+  turn ? chaosBlink() : twoColorGradation(stateColor, otherColor);
+  turn = !turn;
+  
   if (doConnect == true) {
     for(int i=0; i < pServerAddresses.size(); i++){
       if( connectToServer( *pServerAddresses[i] ) ){
