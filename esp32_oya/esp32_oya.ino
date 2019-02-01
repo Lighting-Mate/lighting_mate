@@ -13,14 +13,14 @@
 
 
 #include <string>
-#include <Adafruit_NeoPixel.h>
 #include <vector>
+#include <NeoPixelBus.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
-#define LED_PIN 32
-#define LED_NUM 5
+const uint8_t  PixelPin = 32;
+const uint16_t PixelCount = 5;
 
 class Colors {
   public:
@@ -58,8 +58,8 @@ static Colors otherColor = stateColor; // 相手の固有色(初期化のみ自�
 static boolean turn = false; // 発光回数の偶奇を通知 
 
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
-uint32_t c = strip.Color(0, 0, 0);
+NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
 
 bool connectToServer(BLEAddress pAddress) {
@@ -173,24 +173,18 @@ bool smartInterruptCallback(){
   Colors colors = Colors( String(state.c_str()) );
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
-      c = strip.Color(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
       }
-      strip.setBrightness( i );
-      delay(1);
-      strip.show();
-      delay(0.01);
+      strip.Show();
     }
     for(uint16_t i=255; i>0; i--){
-      c = strip.Color(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
       }
-      strip.setBrightness( i );
-      delay(1);
-      strip.show();
-      delay(0.01);
+      strip.Show();
     }
   }
   doSmartInterrupt = false;
@@ -206,9 +200,9 @@ void setup() {
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #endif
-  strip.begin();
+  strip.Begin();
   delay(1);
-  strip.show();
+  strip.Show();
 
   BLEDevice::init(DEVICE_NAME);
   
