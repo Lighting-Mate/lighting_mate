@@ -5,10 +5,12 @@
 
 #define SERVICE_UUID        "7F9B5867-6E4B-4EF8-923F-D32903E1E43C"
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
+#define SHARE_UUID          "200E8A07-A7DF-4969-93E4-17C9E9FE76E1"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
 #define DEVICE_NAME         "ESP_Blinky"
 
 BLECharacteristic *pCharBlink;
+BLECharacteristic *pCharShare;
 BLECharacteristic *pCharText;
 
 
@@ -45,6 +47,12 @@ class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onRead(BLECharacteristic *pCharacteristic) {
       pCharacteristic->setValue("read done");
       Serial.println("\"");
+    }
+};
+
+
+class ShareCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
     }
 };
 
@@ -103,6 +111,9 @@ void setup() {
   pCharText = pService->createCharacteristic(TEXT_UUID, BLECharacteristic::PROPERTY_WRITE);
   pCharText->setCallbacks(new TextCallbacks());
 
+  pCharShare = pService->createCharacteristic(SHARE_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
+  pCharShare->setCallbacks(new ShareCallbacks());
+
   pService->start();
 
   // ----- Advertising
@@ -122,6 +133,7 @@ void setup() {
   pAdvertising->start();
 
   Serial.println("Ready");
+  pCharShare->setValue("00FF00");
 }
 
 void loop() {
