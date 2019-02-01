@@ -20,6 +20,30 @@ BLECharacteristic *pCharText;
   #include <avr/power.h>
 #endif
 
+class Colors {
+  public:
+  uint8_t color[3]; 
+  Colors(String value){
+    for (int i = 0; i < 3; i++) {
+      String tmp = String(value[i*2]) + String(value[i*2+1]);
+      color[i] = atof( ("0x"+tmp).c_str());
+    }  
+  };
+  Colors(){
+    randomSeed( analogRead(0) ); // 未使用ピンのノイズでシード値を設定
+    int randIndex = random(3);   // 0 ~ 2
+    Serial.println( randIndex );
+    for (int i = 0; i < 3; i++) {
+      int randNumber = i == randIndex ? random(127, 256) : random(50, 150);
+      color[i] = randNumber;
+    } 
+  };
+  
+  uint8_t getRed(){ return color[0]; }
+  uint8_t getGreen(){ return color[1]; }
+  uint8_t getBlue(){ return color[2]; }
+};
+
 
 const uint8_t  PixelPin = 32;
 const uint16_t PixelCount = 3;
@@ -27,6 +51,10 @@ const uint16_t PixelCount = 3;
 NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
+static Colors stateColor = Colors(); // 固有色
+static Colors otherColor = Colors(); // 相手の固有色
+static boolean turn = false; // 発光回数の偶奇を通知 
+
 
 
 bool touchCallback() {
@@ -137,6 +165,8 @@ void setup() {
 }
 
 void loop() {
-  chaosBlink();
+  turn ? chaosBlink() : twoColorGradation();
+  turn = !turn;
+
   delay(50);
 }

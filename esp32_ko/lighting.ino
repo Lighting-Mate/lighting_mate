@@ -54,3 +54,35 @@ void touchLighting() {
     }
   }
 }
+
+
+// 2色与えるとグラデーション発光する
+void twoColorGradation() {
+  seed = chaos(seed);
+  uint8_t myr = stateColor.getRed();
+  uint8_t myg = stateColor.getGreen();
+  uint8_t myb = stateColor.getBlue();
+  
+  int r, g, b;
+
+  r = (otherColor.getRed() - myr );
+  g = (otherColor.getGreen() - myg );
+  b = (otherColor.getBlue() - myb );
+  
+  for(uint16_t i=0; i<255; i++) {
+    RgbColor c = RgbColor( (myr + r*i/255.0)/255.0*i, (myg + g*i/255.0)/255.0*i,  (myb + b*i/255.0)/255.0*i);  
+    for(uint16_t j=0; j<PixelCount; j++) {
+        strip.SetPixelColor(j, c);
+    }
+    strip.Show();
+    delay(30*seed);
+  }
+  for(uint16_t i=255; i>0; i--) {
+    RgbColor c = RgbColor( (myr + r*i/255.0)/255.0*i, (myg + g*i/255.0)/255.0*i,  (myb + b*i/255.0)/255.0*i);  
+    for(uint16_t j=0; j<PixelCount; j++) {
+        strip.SetPixelColor(j, c);
+    }
+    strip.Show();
+    delay(30*seed);
+  }
+}
