@@ -5,63 +5,57 @@
 
 #define SERVICE_UUID        "7F9B5867-6E4B-4EF8-923F-D32903E1E43C"
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
+#define SHARE_UUID          "200E8A07-A7DF-4969-93E4-17C9E9FE76E1"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
 #define DEVICE_NAME         "ESP_Blinky"
 
 BLECharacteristic *pCharBlink;
+BLECharacteristic *pCharShare;
 BLECharacteristic *pCharText;
 
 
 #include <string>
-#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
-#define LED_PIN 32
-#define LED_NUM 3
-
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
-uint32_t c = strip.Color(0, 0, 0);
-
-float seed = 0.5;
-
-float chaos(float seed) {
-  if(seed < 0.5){
-    seed = seed + 2*seed*seed;
-  } else {
-    seed = seed - 2*(1.0-seed)*(1.0-seed);
-  }
-  if(seed < 0.05) seed = 0.05;
-  if(seed > 0.95) seed = 0.95;
-  return seed;
-}
-
-void chaosBlink() {
-  seed = chaos(seed); // seed値の更新
-  Serial.println("Seed value:" + String(seed) );
+class Colors {
+  public:
+  uint8_t color[3]; 
+  Colors(String value){
+    for (int i = 0; i < 3; i++) {
+      String tmp = String(value[i*2]) + String(value[i*2+1]);
+      color[i] = atof( ("0x"+tmp).c_str());
+    }  
+  };
+  Colors(){
+    randomSeed( analogRead(0) ); // 未使用ピンのノイズでシード値を設定
+    int randIndex = random(3);   // 0 ~ 2
+    Serial.println( randIndex );
+    for (int i = 0; i < 3; i++) {
+      int randNumber = i == randIndex ? random(127, 256) : random(50, 150);
+      color[i] = randNumber;
+    } 
+  };
   
-  for(uint16_t i=0; i<255; i++){
-    c = strip.Color(i, i, i);
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-    }
-    delay(1);
-    if( touchCallback() ) return;
-    strip.show();
-    delay(30*seed);
-  }
-  for(uint16_t i=255; i>0; i--){
-    c = strip.Color(i, i, i);
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
-    }
-    delay(1);
-    if( touchCallback() ) return;
-    strip.show();
-    delay(30*seed);
-  }
-}
+  uint8_t getRed(){ return color[0]; }
+  uint8_t getGreen(){ return color[1]; }
+  uint8_t getBlue(){ return color[2]; }
+};
+
+
+const uint8_t  PixelPin = 32;
+const uint16_t PixelCount = 3;
+
+NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+RgbColor c = RgbColor(0, 0, 0);
+float seed = 0.5;
+static Colors stateColor = Colors(); // 固有色
+static Colors otherColor = Colors(); // 相手の固有色
+static boolean turn = false; // 発光回数の偶奇を通知 
+
+
 
 bool touchCallback() {
   int in = analogRead(33);
@@ -81,6 +75,12 @@ class BlinkCallbacks: public BLECharacteristicCallbacks {
     void onRead(BLECharacteristic *pCharacteristic) {
       pCharacteristic->setValue("read done");
       Serial.println("\"");
+    }
+};
+
+
+class ShareCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
     }
 };
 
@@ -111,30 +111,6 @@ class MyServerCallbacks: public BLEServerCallbacks {
 };
 
 
-// タッチされた時の光り方を制御している関数
-void touchLighting() {
-  for(int j=0; j<3; j++){
-    for(uint16_t i=0; i<255; i++){
-      c = strip.Color(i, i, i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
-      }
-      delay(1);
-      strip.show();
-      delay(0.01);
-    }
-    for(uint16_t i=255; i>0; i--){
-      c = strip.Color(i, i, i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
-      }
-      delay(1);
-      strip.show();
-      delay(0.01);
-    }
-  }
-}
-
 
 void setup() {  
   Serial.begin(115200);
@@ -145,9 +121,9 @@ void setup() {
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #endif
-  strip.begin();
+  strip.Begin();
   delay(1);
-  strip.show();
+  strip.Show();
 
   BLEDevice::init(DEVICE_NAME);
   BLEServer *pServer = BLEDevice::createServer();
@@ -162,6 +138,9 @@ void setup() {
 
   pCharText = pService->createCharacteristic(TEXT_UUID, BLECharacteristic::PROPERTY_WRITE);
   pCharText->setCallbacks(new TextCallbacks());
+
+  pCharShare = pService->createCharacteristic(SHARE_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
+  pCharShare->setCallbacks(new ShareCallbacks());
 
   pService->start();
 
@@ -182,9 +161,12 @@ void setup() {
   pAdvertising->start();
 
   Serial.println("Ready");
+  pCharShare->setValue("00FF00");
 }
 
 void loop() {
-  chaosBlink();
+  turn ? chaosBlink() : twoColorGradation();
+  turn = !turn;
+
   delay(50);
 }
