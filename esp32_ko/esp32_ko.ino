@@ -15,6 +15,9 @@ BLECharacteristic *pCharText;
 
 
 #include <string>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
 #include <NeoPixelBus.h>
 #ifdef __AVR__
   #include <avr/power.h>
@@ -22,7 +25,7 @@ BLECharacteristic *pCharText;
 
 class Colors {
   public:
-  uint8_t color[3]; 
+  uint16_t color[3]; 
   Colors(String value){
     for (int i = 0; i < 3; i++) {
       String tmp = String(value[i*2]) + String(value[i*2+1]);
@@ -38,10 +41,19 @@ class Colors {
       color[i] = randNumber;
     } 
   };
+
+  std::string toHexString() {
+    std::stringstream ss;
+    ss << std::setfill('0') << std::setw(2) << std::right << std::hex << color[0]
+       << std::setw(2) << std::hex << color[1] 
+       << std::setw(2) << std::hex << color[2];
+    std::string s = ss.str();
+    return s;
+  }
   
-  uint8_t getRed(){ return color[0]; }
-  uint8_t getGreen(){ return color[1]; }
-  uint8_t getBlue(){ return color[2]; }
+  uint16_t getRed(){ return color[0]; }
+  uint16_t getGreen(){ return color[1]; }
+  uint16_t getBlue(){ return color[2]; }
 };
 
 
