@@ -15,17 +15,17 @@ BLECharacteristic *pCharText;
 
 
 #include <string>
-#include <Adafruit_NeoPixel.h>
+#include <NeoPixelBus.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
-#define LED_PIN 32
-#define LED_NUM 3
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
-uint32_t c = strip.Color(0, 0, 0);
+const uint8_t  PixelPin = 32;
+const uint16_t PixelCount = 3;
 
+NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
 
 
@@ -93,9 +93,9 @@ void setup() {
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #endif
-  strip.begin();
+  strip.Begin();
   delay(1);
-  strip.show();
+  strip.Show();
 
   BLEDevice::init(DEVICE_NAME);
   BLEServer *pServer = BLEDevice::createServer();

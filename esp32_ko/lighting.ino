@@ -14,23 +14,23 @@ void chaosBlink() {
   Serial.println("Seed value:" + String(seed) );
   
   for(uint16_t i=0; i<255; i++){
-    c = strip.Color(i, i, i);
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
+    c = RgbColor(i, i, i);
+    for(uint16_t i=0; i<PixelCount; i++) {
+      strip.SetPixelColor(i, c);
     }
     delay(1);
     if( touchCallback() ) return;
-    strip.show();
+    strip.Show();
     delay(30*seed);
   }
   for(uint16_t i=255; i>0; i--){
-    c = strip.Color(i, i, i);
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, c);
+    c = RgbColor(i, i, i);
+    for(uint16_t i=0; i<PixelCount; i++) {
+      strip.SetPixelColor(i, c);
     }
     delay(1);
     if( touchCallback() ) return;
-    strip.show();
+    strip.Show();
     delay(30*seed);
   }
 }
@@ -39,22 +39,18 @@ void chaosBlink() {
 void touchLighting() {
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
-      c = strip.Color(i, i, i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
+      c = RgbColor(i, i, i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
       }
-      delay(1);
-      strip.show();
-      delay(0.01);
+      strip.Show();
     }
     for(uint16_t i=255; i>0; i--){
-      c = strip.Color(i, i, i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
+      c = RgbColor(i, i, i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
       }
-      delay(1);
-      strip.show();
-      delay(0.01);
+      strip.Show();
     }
   }
 }
