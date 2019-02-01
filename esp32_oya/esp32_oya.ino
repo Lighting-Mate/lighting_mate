@@ -5,6 +5,7 @@
 
 #define SERVICE_UUID        "7F9B5867-6E4B-4EF8-923F-D32903E1E43C"
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
+#define SHARE_UUID          "200E8A07-A7DF-4969-93E4-17C9E9FE76E1"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
 #define SMART_SERVICE_UUID  "06E17ABD-F5EB-4980-BBED-2E67F1664628"
 #define SMART_CHARA_UUID    "33AD1DB5-C067-4E8C-95C6-6804EB95BE96"
@@ -12,17 +13,18 @@
 
 
 #include <string>
-#include <Adafruit_NeoPixel.h>
+#include <vector>
+#include <NeoPixelBus.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
-#define LED_PIN 32
-#define LED_NUM 3
+const uint8_t  PixelPin = 32;
+const uint16_t PixelCount = 5;
 
 class Colors {
   public:
-  uint16_t color[3]; 
+  uint8_t color[3]; 
   Colors(String value){
     for (int i = 0; i < 3; i++) {
       String tmp = String(value[i*2]) + String(value[i*2+1]);
@@ -35,14 +37,14 @@ class Colors {
     int randIndex = random(3);   // 0 ~ 2
     Serial.println( randIndex );
     for (int i = 0; i < 3; i++) {
-      int randNumber = i == randIndex ? random(50, 150) : random(50, 256);
+      int randNumber = i == randIndex ? random(127, 256) : random(50, 150);
       color[i] = randNumber;
     } 
   };
   
-  uint16_t getRed(){ return color[0]; }
-  uint16_t getGreen(){ return color[1]; }
-  uint16_t getBlue(){ return color[2]; }
+  uint8_t getRed(){ return color[0]; }
+  uint8_t getGreen(){ return color[1]; }
+  uint8_t getBlue(){ return color[2]; }
 };
 
 static std::vector<BLEAddress*> pServerAddresses;
@@ -52,9 +54,12 @@ static boolean doConnect = false;
 static boolean doSmartInterrupt = false;
 std::string state = "FFFFFF";
 static Colors stateColor = Colors(); // 固有色
+static Colors otherColor = stateColor; // 相手の固有色(初期化のみ自分の色を格納)
+static boolean turn = false; // 発光回数の偶奇を通知 
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_NUM, LED_PIN, NEO_RGB + NEO_KHZ800);
-uint32_t c = strip.Color(0, 0, 0);
+
+NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
 
 bool connectToServer(BLEAddress pAddress) {
@@ -96,7 +101,7 @@ bool touchCallback() {
   
   touchLighting();
 
-  if ( !pServerAddresses.empty() ) {
+  if ( !pClients.empty() ) {
     for( int i=0; i < pClients.size(); i++ ){
       BLEClient* pClient = pClients[i];
       
@@ -115,7 +120,7 @@ bool touchCallback() {
 
 
 bool readCallback() {
-  if ( !pServerAddresses.empty() ) {
+  if ( !pClients.empty() ) {
     for( int i=0; i < pClients.size(); i++ ){
       BLEClient* pClient = pClients[i];
       
@@ -126,9 +131,6 @@ bool readCallback() {
       if (pRemoteChara == nullptr) continue;
       
       std::string value = pRemoteChara->readValue();
-      std::string checkStr = "BlinkStr is:" + value;
-      Serial.println(checkStr.c_str());
-
       if( value == "checker"){
         touchLighting();
         return true;
@@ -171,22 +173,18 @@ bool smartInterruptCallback(){
   Colors colors = Colors( String(state.c_str()) );
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
-      c = strip.Color(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
       }
-      delay(1);
-      strip.show();
-      delay(0.01);
+      strip.Show();
     }
     for(uint16_t i=255; i>0; i--){
-      c = strip.Color(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
       }
-      delay(1);
-      strip.show();
-      delay(0.01);
+      strip.Show();
     }
   }
   doSmartInterrupt = false;
@@ -202,9 +200,9 @@ void setup() {
   #if defined (__AVR_ATtiny85__)
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #endif
-  strip.begin();
+  strip.Begin();
   delay(1);
-  strip.show();
+  strip.Show();
 
   BLEDevice::init(DEVICE_NAME);
   
@@ -252,17 +250,22 @@ void setup() {
 }
 
 void loop() {
-  chaosBlink();
-
+  delay(100);
+  
   if (doConnect == true) {
     for(int i=0; i < pServerAddresses.size(); i++){
-      if( connectToServer( *pServerAddresses[i] ) ){
+      BLEAddress* temp = pServerAddresses[i];
+      if( connectToServer( *temp ) ){
         Serial.println("- Connect Server Done;");
       }else{
         Serial.println("-- Connect Something wrong...;");
       }
+      delete temp;
     }
+    pServerAddresses.clear();
     doConnect = false;
   }
   
+  turn ? chaosBlink() : twoColorGradation();
+  turn = !turn;
 }
