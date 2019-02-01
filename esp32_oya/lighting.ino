@@ -12,8 +12,7 @@ float chaos(float seed) {
 void chaosBlink() {
   seed = chaos(seed); // seed値の更新
 //  Serial.println("Seed value:" + String(seed) );
-   
-  Colors colors = stateColor;
+
   //  選択した色をそのまま反映させ続けたい場合は下記のコードに変更。
   //  Colors colors = Colors( String(state.c_str()) );
   
@@ -75,17 +74,30 @@ void touchLighting() {
 
 
 // 2色与えるとグラデーション発光する
-void twoColorGradation(Colors myColor, Colors otherColor) {
+void twoColorGradation() {
   seed = chaos(seed);
-  uint8_t myr = myColor.getRed();
-  uint8_t myg = myColor.getGreen();
-  uint8_t myb = myColor.getBlue();
+  if ( !pClients.empty() ) {
+    do {
+      int randChild = random( pClients.size() );
+      BLEClient* pClient = pClients[randChild];  
+      BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
+      if (pRemoteService == nullptr) continue;
+      BLERemoteCharacteristic* pRemoteShareChara = pRemoteService->getCharacteristic(BLEUUID(SHARE_UUID));
+      if (pRemoteShareChara == nullptr) continue;
+      
+      std::string otherValue = pRemoteShareChara->readValue();
+      otherColor = Colors( String(otherValue.c_str()) );
+    }while(false);
+  }
+  uint8_t myr = stateColor.getRed();
+  uint8_t myg = stateColor.getGreen();
+  uint8_t myb = stateColor.getBlue();
   
   int r, g, b;
 
-  r = (otherColor.getRed() - myColor.getRed());
-  g = (otherColor.getGreen() - myColor.getGreen());
-  b = (otherColor.getBlue() - myColor.getBlue() );
+  r = (otherColor.getRed() - myr );
+  g = (otherColor.getGreen() - myg );
+  b = (otherColor.getBlue() - myb );
 
   for(uint16_t i=0; i<255; i++) {
     uint32_t c = strip.Color((uint8_t)myr + r*i/255.0, (uint8_t)myg + g*i/255.0,  (uint8_t)myb + b*i/255.0);

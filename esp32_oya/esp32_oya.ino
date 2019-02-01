@@ -5,6 +5,7 @@
 
 #define SERVICE_UUID        "7F9B5867-6E4B-4EF8-923F-D32903E1E43C"
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
+#define SHARE_UUID          "200E8A07-A7DF-4969-93E4-17C9E9FE76E1"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
 #define SMART_SERVICE_UUID  "06E17ABD-F5EB-4980-BBED-2E67F1664628"
 #define SMART_CHARA_UUID    "33AD1DB5-C067-4E8C-95C6-6804EB95BE96"
@@ -13,6 +14,7 @@
 
 #include <string>
 #include <Adafruit_NeoPixel.h>
+#include <vector>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
@@ -22,7 +24,7 @@
 
 class Colors {
   public:
-  uint16_t color[3]; 
+  uint8_t color[3]; 
   Colors(String value){
     for (int i = 0; i < 3; i++) {
       String tmp = String(value[i*2]) + String(value[i*2+1]);
@@ -40,9 +42,9 @@ class Colors {
     } 
   };
   
-  uint16_t getRed(){ return color[0]; }
-  uint16_t getGreen(){ return color[1]; }
-  uint16_t getBlue(){ return color[2]; }
+  uint8_t getRed(){ return color[0]; }
+  uint8_t getGreen(){ return color[1]; }
+  uint8_t getBlue(){ return color[2]; }
 };
 
 static std::vector<BLEAddress*> pServerAddresses;
@@ -52,7 +54,7 @@ static boolean doConnect = false;
 static boolean doSmartInterrupt = false;
 std::string state = "FFFFFF";
 static Colors stateColor = Colors(); // 固有色
-static Colors otherColor = Colors(); // 相手の固有色
+static Colors otherColor = stateColor; // 相手の固有色(初期化のみ自分の色を格納)
 static boolean turn = false; // 発光回数の偶奇を通知 
 
 
@@ -129,9 +131,6 @@ bool readCallback() {
       if (pRemoteChara == nullptr) continue;
       
       std::string value = pRemoteChara->readValue();
-      std::string checkStr = "BlinkStr is:" + value;
-      Serial.println(checkStr.c_str());
-
       if( value == "checker"){
         touchLighting();
         return true;
@@ -257,18 +256,22 @@ void setup() {
 }
 
 void loop() {
-  turn ? chaosBlink() : twoColorGradation(stateColor, otherColor);
-  turn = !turn;
+  delay(100);
   
   if (doConnect == true) {
     for(int i=0; i < pServerAddresses.size(); i++){
-      if( connectToServer( *pServerAddresses[i] ) ){
+      BLEAddress* temp = pServerAddresses[i];
+      if( connectToServer( *temp ) ){
         Serial.println("- Connect Server Done;");
       }else{
         Serial.println("-- Connect Something wrong...;");
       }
+      delete temp;
     }
+    pServerAddresses.clear();
     doConnect = false;
   }
   
+  turn ? chaosBlink() : twoColorGradation();
+  turn = !turn;
 }
