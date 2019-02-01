@@ -101,7 +101,7 @@ bool touchCallback() {
   
   touchLighting();
 
-  if ( !pServerAddresses.empty() ) {
+  if ( !pClients.empty() ) {
     for( int i=0; i < pClients.size(); i++ ){
       BLEClient* pClient = pClients[i];
       
@@ -120,7 +120,7 @@ bool touchCallback() {
 
 
 bool readCallback() {
-  if ( !pServerAddresses.empty() ) {
+  if ( !pClients.empty() ) {
     for( int i=0; i < pClients.size(); i++ ){
       BLEClient* pClient = pClients[i];
       
@@ -212,10 +212,10 @@ void setup() {
 
   BLEDevice::init(DEVICE_NAME);
   
-//  BLEScan* pBLEScan = BLEDevice::getScan();
-//  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-//  pBLEScan->setActiveScan(false);
-//  pBLEScan->start(15);
+  BLEScan* pBLEScan = BLEDevice::getScan();
+  pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
+  pBLEScan->setActiveScan(false);
+  pBLEScan->start(15);
 
   Serial.println("-x- scan over -x-");
 
