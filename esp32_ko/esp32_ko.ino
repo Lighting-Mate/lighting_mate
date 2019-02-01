@@ -64,7 +64,7 @@ NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
 static Colors stateColor = Colors(); // 固有色
-static Colors otherColor = Colors(); // 相手の固有色
+static Colors otherColor = stateColor; // 相手の固有色
 static boolean turn = false; // 発光回数の偶奇を通知 
 
 
