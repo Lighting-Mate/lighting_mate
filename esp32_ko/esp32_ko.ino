@@ -63,6 +63,8 @@ const uint16_t PixelCount = 3;
 NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
+
+static boolean doTextInterrupt = false;
 static Colors stateColor = Colors(); // 固有色
 static Colors otherColor = stateColor; // 相手の固有色
 static boolean turn = false; // 発光回数の偶奇を通知 
@@ -74,9 +76,9 @@ bool touchCallback() {
 //  Serial.println("Analog in:" + String(in) );
   if(in < 500) return false;
 
-  touchLighting();
+  touchLighting(false);
   
-  pCharBlink->setValue("checker");
+  pCharBlink->setValue(stateColor.toHexString().c_str());
   return true;
 }
 
@@ -85,8 +87,7 @@ class BlinkCallbacks: public BLECharacteristicCallbacks {
     }
 
     void onRead(BLECharacteristic *pCharacteristic) {
-      pCharacteristic->setValue("read done");
-      Serial.println("\"");
+      pCharacteristic->setValue("");
     }
 };
 
@@ -100,15 +101,10 @@ class ShareCallbacks: public BLECharacteristicCallbacks {
 class TextCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
       std::string value = pCharacteristic->getValue();
-      Serial.print("Got text value: \"");
-      for (int i = 0; i < value.length(); i++) {
-        Serial.print(value[i]);
+      if(value != ""){
+        otherColor = Colors( String(value.c_str()) );
+        doTextInterrupt = true;
       }
-
-      if(value == "lighton"){
-        touchLighting();
-      }
-      Serial.println("\"");
     }
 };
 
@@ -173,7 +169,7 @@ void setup() {
   pAdvertising->start();
 
   Serial.println("Ready");
-  pCharShare->setValue("00FF00");
+  pCharShare->setValue( stateColor.toHexString().c_str() );
 }
 
 void loop() {

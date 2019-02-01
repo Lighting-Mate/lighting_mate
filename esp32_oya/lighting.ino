@@ -45,17 +45,18 @@ void chaosBlink() {
 
 
 // タッチされた時の光り方を制御している関数
-void touchLighting() {
+void touchLighting(bool isOther) {
+  Colors colors = isOther ? Colors(otherColor) : Colors(stateColor);
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
-      c = RgbColor(stateColor.getRed()/255.0*i, stateColor.getGreen()/255.0*i, stateColor.getBlue()/255.0*i);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
       for(uint16_t i=0; i<PixelCount; i++) {
         strip.SetPixelColor(i, c);
       }
       strip.Show();
     }
     for(uint16_t i=255; i>0; i--){
-      c = RgbColor(stateColor.getRed()/255.0*i, stateColor.getGreen()/255.0*i, stateColor.getBlue()/255.0*i);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
       for(uint16_t i=0; i<PixelCount; i++) {
         strip.SetPixelColor(i, c);
       }

@@ -11,42 +11,50 @@ float chaos(float seed) {
 
 void chaosBlink() {
   seed = chaos(seed); // seed値の更新
-  Serial.println("Seed value:" + String(seed) );
   
   for(uint16_t i=0; i<255; i++){
-    c = RgbColor(i, i, i);
+    c = RgbColor(stateColor.getRed()/255.0*i, stateColor.getGreen()/255.0*i, stateColor.getBlue()/255.0*i);
     for(uint16_t i=0; i<PixelCount; i++) {
       strip.SetPixelColor(i, c);
     }
-    delay(1);
     if( touchCallback() ) return;
+    if( doTextInterrupt ) {
+      touchLighting(true);
+      doTextInterrupt = false;
+      return;
+    }
     strip.Show();
     delay(30*seed);
   }
   for(uint16_t i=255; i>0; i--){
-    c = RgbColor(i, i, i);
+    c = RgbColor(stateColor.getRed()/255.0*i, stateColor.getGreen()/255.0*i, stateColor.getBlue()/255.0*i);
     for(uint16_t i=0; i<PixelCount; i++) {
       strip.SetPixelColor(i, c);
     }
-    delay(1);
     if( touchCallback() ) return;
+    if( doTextInterrupt ) {
+      touchLighting(true);
+      doTextInterrupt = false;
+      return;
+    }
     strip.Show();
     delay(30*seed);
   }
 }
 
 // タッチされた時の光り方を制御している関数
-void touchLighting() {
+void touchLighting(bool isOther) {
+  Colors colors = isOther ? Colors(otherColor) : Colors(stateColor);
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
-      c = RgbColor(i, i, i);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
       for(uint16_t i=0; i<PixelCount; i++) {
         strip.SetPixelColor(i, c);
       }
       strip.Show();
     }
     for(uint16_t i=255; i>0; i--){
-      c = RgbColor(i, i, i);
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
       for(uint16_t i=0; i<PixelCount; i++) {
         strip.SetPixelColor(i, c);
       }
@@ -74,6 +82,12 @@ void twoColorGradation() {
     for(uint16_t j=0; j<PixelCount; j++) {
         strip.SetPixelColor(j, c);
     }
+    if( touchCallback() ) return;
+    if( doTextInterrupt ) {
+      touchLighting(true);
+      doTextInterrupt = false;
+      return;
+    }
     strip.Show();
     delay(30*seed);
   }
@@ -81,6 +95,12 @@ void twoColorGradation() {
     RgbColor c = RgbColor( (myr + r*i/255.0)/255.0*i, (myg + g*i/255.0)/255.0*i,  (myb + b*i/255.0)/255.0*i);  
     for(uint16_t j=0; j<PixelCount; j++) {
         strip.SetPixelColor(j, c);
+    }
+    if( touchCallback() ) return;
+    if( doTextInterrupt ) {
+      touchLighting(true);
+      doTextInterrupt = false;
+      return;
     }
     strip.Show();
     delay(30*seed);

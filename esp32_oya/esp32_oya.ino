@@ -111,7 +111,7 @@ bool touchCallback() {
 //  Serial.println("Analog in:" + String(in) );
   if(in < 500) return false;
   
-  touchLighting();
+  touchLighting(false);
 
   if ( !pClients.empty() ) {
     for( int i=0; i < pClients.size(); i++ ){
@@ -123,7 +123,7 @@ bool touchCallback() {
       BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(TEXT_UUID));
       if (pRemoteChara == nullptr) continue;
       
-      pRemoteChara->writeValue("lighton");
+      pRemoteChara->writeValue( stateColor.toHexString().c_str() );
     }
   }
 
@@ -143,8 +143,9 @@ bool readCallback() {
       if (pRemoteChara == nullptr) continue;
       
       std::string value = pRemoteChara->readValue();
-      if( value == "checker"){
-        touchLighting();
+      if( value != ""){
+        otherColor = Colors( String(value.c_str()) );
+        touchLighting(true);
         return true;
       }
     }
