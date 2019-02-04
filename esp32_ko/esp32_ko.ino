@@ -7,11 +7,13 @@
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
 #define SHARE_UUID          "200E8A07-A7DF-4969-93E4-17C9E9FE76E1"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
+#define HOME_UUID           "91973A17-F3B7-467F-A25E-6462D8FB9E89"
 #define DEVICE_NAME         "ESP_Blinky"
 
 BLECharacteristic *pCharBlink;
 BLECharacteristic *pCharShare;
 BLECharacteristic *pCharText;
+BLECharacteristic *pCharHome;
 
 
 #include <string>
@@ -65,6 +67,7 @@ RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
 
 static boolean doTextInterrupt = false;
+static boolean doHomeInterrupt = false;
 static Colors stateColor = Colors(); // 固有色
 static Colors otherColor = stateColor; // 相手の固有色
 static boolean turn = false; // 発光回数の偶奇を通知 
@@ -96,6 +99,40 @@ class ShareCallbacks: public BLECharacteristicCallbacks {
     void onWrite(BLECharacteristic *pCharacteristic) {
     }
 };
+
+class HomeCallbacks: public BLECharacteristicCallbacks {
+    void onWrite(BLECharacteristic *pCharacteristic) {
+      std::string value = pCharacteristic->getValue();
+      if(value == "ComeBack"){
+        doHomeInterrupt = true;
+        pCharacteristic->setValue("");
+      }
+    }
+};
+
+bool HomeInterruptCallback(){
+  if( !doHomeInterrupt )return false;
+  
+  Colors colors = stateColor;
+  for(int j=0; j<3; j++){
+    for(uint16_t i=0; i<255; i++){
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
+      }
+      strip.Show();
+    }
+    for(uint16_t i=255; i>0; i--){
+      c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
+      for(uint16_t i=0; i<PixelCount; i++) {
+        strip.SetPixelColor(i, c);
+      }
+      strip.Show();
+    }
+  }
+  doHomeInterrupt = false;
+  return true;
+}
 
 
 class TextCallbacks: public BLECharacteristicCallbacks {
@@ -149,6 +186,9 @@ void setup() {
 
   pCharShare = pService->createCharacteristic(SHARE_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
   pCharShare->setCallbacks(new ShareCallbacks());
+
+  pCharHome = pService->createCharacteristic(HOME_UUID, BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_READ);
+  pCharHome->setCallbacks(new HomeCallbacks());
 
   pService->start();
 

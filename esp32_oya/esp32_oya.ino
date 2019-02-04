@@ -7,6 +7,7 @@
 #define BLINK_UUID          "ED8EC9CC-D2CF-4327-AB97-DDA66E03385C"
 #define SHARE_UUID          "200E8A07-A7DF-4969-93E4-17C9E9FE76E1"
 #define TEXT_UUID           "E4025514-0A8D-4C0B-B173-5D5535DCF29E"
+#define HOME_UUID           "91973A17-F3B7-467F-A25E-6462D8FB9E89"
 #define SMART_SERVICE_UUID  "06E17ABD-F5EB-4980-BBED-2E67F1664628"
 #define SMART_CHARA_UUID    "33AD1DB5-C067-4E8C-95C6-6804EB95BE96"
 #define DEVICE_NAME         "ESP_Blinky"
@@ -157,6 +158,19 @@ class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
       Serial.println("Connected");
       doSmartInterrupt = true;
+      if ( !pClients.empty() ) {
+        for( int i=0; i < pClients.size(); i++ ){
+          BLEClient* pClient = pClients[i];
+          
+          BLERemoteService* pRemoteService = pClient->getService(BLEUUID(SERVICE_UUID));
+          if (pRemoteService == nullptr) continue;
+      
+          BLERemoteCharacteristic* pRemoteChara = pRemoteService->getCharacteristic(BLEUUID(HOME_UUID));
+          if (pRemoteChara == nullptr) continue;
+          
+          pRemoteChara->writeValue( "ComeBack" );
+        }
+      }
     };
     void onDisconnect(BLEServer* pServer) {
       Serial.println("Disconnected");
