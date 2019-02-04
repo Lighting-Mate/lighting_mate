@@ -70,7 +70,7 @@ static Colors otherColor = stateColor; // 相手の固有色(初期化のみ自�
 static boolean turn = false; // 発光回数の偶奇を通知 
 
 
-NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 RgbColor c = RgbColor(0, 0, 0);
 float seed = 0.5;
 
@@ -156,6 +156,7 @@ bool readCallback() {
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
       Serial.println("Connected");
+      doSmartInterrupt = true;
     };
     void onDisconnect(BLEServer* pServer) {
       Serial.println("Disconnected");
@@ -183,7 +184,8 @@ class smartCallbacks: public BLECharacteristicCallbacks {
 bool smartInterruptCallback(){
   if( !doSmartInterrupt )return false;
   
-  Colors colors = Colors( String(state.c_str()) );
+//  Colors colors = Colors( String(state.c_str()) );
+  Colors colors = stateColor;
   for(int j=0; j<3; j++){
     for(uint16_t i=0; i<255; i++){
       c = RgbColor(colors.getRed()/255.0*i, colors.getGreen()/255.0*i, colors.getBlue()/255.0*i);
